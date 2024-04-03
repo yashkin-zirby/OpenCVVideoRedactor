@@ -1,0 +1,69 @@
+﻿<Page x:Class="OpenCVVideoRedactor.View.FinishProjectCreationPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      mc:Ignorable="d" 
+      d:DesignHeight="450" d:DesignWidth="800"
+      DataContext="{Binding CreateProjectViewModel, Source={StaticResource ServiceLocatorObject}}"
+      Title="FinishProjectCreationPage">
+    <Page.Resources>
+        <Style x:Key="CreatePageTextStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#F0F0F0"/>
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="Margin" Value="10"/>
+        </Style>
+        <Style x:Key="CreatePageInputStyle" TargetType="TextBox">
+            <Setter Property="Foreground" Value="#F0F0F0"/>
+            <Setter Property="Background" Value="#393949"/>
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="Margin" Value="10"/>
+        </Style>
+    </Page.Resources>
+    <Grid Background="#595965">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40px"/>
+            <RowDefinition/>
+            <RowDefinition Height="40px"/>
+            <RowDefinition Height="40px"/>
+            <RowDefinition Height="60px"/>
+        </Grid.RowDefinitions>
+        <TextBlock HorizontalAlignment="Center" Style="{StaticResource CreatePageTextStyle}" FontWeight="Bold">Параметры видео</TextBlock>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="60px"/>
+            </Grid.ColumnDefinitions>
+            <Viewbox Grid.Column="0">
+                <Border HorizontalAlignment="Center" VerticalAlignment="Center" 
+                    Width="{Binding VideoWidth}" Height="{Binding VideoHeight}" Background="{Binding BackgroundColor}">
+                </Border>
+            </Viewbox>
+            <WrapPanel Grid.Column="1">
+                <Button Width="30" Height="30" Background="Black" BorderBrush="Black" Command="{Binding SelectColorBlack}"/>
+                <Button Width="30" Height="30" Background="White" BorderBrush="Black" Command="{Binding SelectColorWhite}"/>
+                <Button Width="30" Height="30" Background="Green" BorderBrush="Black" Command="{Binding SelectColorGreen}"/>
+                <Button Width="30" Height="30" Background="Blue" BorderBrush="Black" Command="{Binding SelectColorBlue}"/>
+                <Button Width="30" Height="30" Background="Gray" BorderBrush="Black" Command="{Binding SelectColorGray}"/>
+                <Button Width="30" Height="30" Background="Red" BorderBrush="Black" Command="{Binding SelectColorRed}"/>
+                <Button Width="30" Height="30" Background="Yellow" BorderBrush="Black" Command="{Binding SelectColorYellow}"/>
+                <Button Width="30" Height="30" Background="GreenYellow" BorderBrush="Black" Command="{Binding SelectColorGreenYellow}"/>
+                <Button Width="30" Height="30" Background="Purple" BorderBrush="Black" Command="{Binding SelectColorPurple}"/>
+                <Button Width="30" Height="30" Background="SkyBlue" BorderBrush="Black" Command="{Binding SelectColorSkyBlue}"/>
+                <Button Width="30" Height="30" Background="Chocolate" BorderBrush="Black" Command="{Binding SelectColorChocolate}"/>
+                <Button Width="30" Height="30" Background="Brown" BorderBrush="Black" Command="{Binding SelectColorBrown}"/>
+            </WrapPanel>
+            <TextBox Width="60px" Grid.Column="1" VerticalAlignment="Bottom" Text="{Binding Color}"></TextBox>
+        </Grid>
+        <TextBlock Style="{StaticResource CreatePageTextStyle}" VerticalAlignment="Center" Grid.Row="2" TextAlignment="Center">Разрешение видео</TextBlock>
+        <StackPanel Orientation="Horizontal" Grid.Row="3" HorizontalAlignment="Center">
+            <TextBlock Style="{StaticResource CreatePageTextStyle}" VerticalAlignment="Center" Grid.Row="2">Height</TextBlock>
+            <TextBox Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Left" Text="{Binding VideoHeight}" Width="160"/>
+            <TextBlock Style="{StaticResource CreatePageTextStyle}" VerticalAlignment="Center" Margin="20,10,10,10">Width</TextBlock>
+            <TextBox Grid.Row="3" VerticalAlignment="Center" HorizontalAlignment="Left" Text="{Binding VideoWidth}" Width="160"/>
+        </StackPanel>
+        <Button Grid.Row="4" HorizontalAlignment="Left" Padding="10,5" VerticalAlignment="Center" Margin="10" Command="{Binding GoToPrevPage}">Назад</Button>
+        <Button Grid.Row="4" HorizontalAlignment="Right" Padding="10,5" VerticalAlignment="Center" Margin="10" Command="{Binding CreateProject}">Создать</Button>
+        <TextBlock Grid.Row="5" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#FF1919" FontSize="13" Text="{Binding ErrorMessage}"></TextBlock>
+    </Grid>
+</Page>

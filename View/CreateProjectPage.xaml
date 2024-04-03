@@ -1,0 +1,43 @@
+﻿<Page x:Class="OpenCVVideoRedactor.View.CreateProjectPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      mc:Ignorable="d" 
+      d:DesignHeight="450" d:DesignWidth="800"
+      DataContext="{Binding CreateProjectViewModel, Source={StaticResource ServiceLocatorObject}}"
+      Title="CreateProjectPage">
+    <Page.Resources>
+        <Style x:Key="CreatePageTextStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#F0F0F0"/>
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="Margin" Value="10"/>
+        </Style>
+        <Style x:Key="CreatePageInputStyle" TargetType="TextBox">
+            <Setter Property="Foreground" Value="#F0F0F0"/>
+            <Setter Property="Background" Value="#393949"/>
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="Margin" Value="10"/>
+        </Style>
+    </Page.Resources>
+    <Grid Background="#595965">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40"/>
+            <RowDefinition Height="2*"/>
+            <RowDefinition Height="2*"/>
+            <RowDefinition/>
+            <RowDefinition Height="60"/>
+        </Grid.RowDefinitions>
+        <TextBlock HorizontalAlignment="Center" Style="{StaticResource CreatePageTextStyle}" FontWeight="Bold">Создание проекта</TextBlock>
+        <TextBlock Style="{StaticResource CreatePageTextStyle}" Grid.Row="1">Введите название проекта</TextBlock>
+        <TextBox Style="{StaticResource CreatePageInputStyle}" Grid.Row="1" VerticalAlignment="Top" Margin="10,40" Text="{Binding Title}"/>
+        <TextBlock Style="{StaticResource CreatePageTextStyle}" Grid.Row="2">Выбирите место расположения проекта</TextBlock>
+        <Button Grid.Row="2" VerticalAlignment="Top" Foreground="#F0F0F0" FontSize="16" Margin="10,40" Background="#393949" Command="{Binding SelectFolder}">
+            <TextBlock Text="{Binding DataFolder}"/>
+        </Button>
+        <TextBlock Style="{StaticResource CreatePageTextStyle}" VerticalAlignment="Center" Grid.Row="3">Количество кадров в секунду видео</TextBlock>
+        <TextBox Grid.Row="3" Margin="290,5,0,0" VerticalAlignment="Center" HorizontalAlignment="Left" Text="{Binding VideoFps}" Width="160"/>
+        <Button Grid.Row="4" HorizontalAlignment="Right" Padding="10,5" VerticalAlignment="Center" Margin="10" IsEnabled="{Binding NextButtonEnabled}" Command="{Binding GoToNextCreatePage}">Далее</Button>
+        <TextBlock Grid.Row="5" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#FF1919" FontSize="13" Text="{Binding ErrorMessage}"></TextBlock>
+    </Grid>
+</Page>
