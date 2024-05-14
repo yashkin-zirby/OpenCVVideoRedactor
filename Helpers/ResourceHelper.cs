@@ -1,4 +1,5 @@
 ﻿using FFMpegCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualBasic.Devices;
 using OpenCVVideoRedactor.Model.Database;
 using System;
@@ -17,6 +18,33 @@ namespace OpenCVVideoRedactor.Helpers
     public class FileAlreadyExists : Exception { public FileAlreadyExists(string message) : base(message) { } }
     class ResourceHelper
     {
+        public static void CloneResourcePipeline(DatabaseContext context, Resource source, Resource target)
+        {
+            context.Operations.RemoveRange(context.Operations.Where(n => n.Source == target.Id));
+            context.SaveChanges();
+            context.Variables.RemoveRange(context.Variables.Where(n => n.Resource == target.Id));
+            context.SaveChanges();
+            var operations = context.Operations.Where(n => n.Source == source.Id).Include(n => n.Parameters);
+            var variables = context.Variables.Where(n => n.Resource == source.Id);
+            foreach (var variable in variables)
+            {
+                var variableNew = new Variable() { Name = variable.Name, Resource=target.Id, Value=variable.Value};
+                context.Variables.Add(variableNew);
+                context.SaveChanges();
+            }
+            foreach (var operation in operations)
+            {
+                var op = new Operation() { Name = operation.Name, Index = operation.Index, Source = target.Id };
+                context.Operations.Add(op);
+                context.SaveChanges();
+                foreach(var param in operation.Parameters)
+                {
+                    var parameter = new Parameter() { Name = param.Name, Value = param.Value, Type = param.Type, Operation = op.Id };
+                    context.Parameters.Add(parameter);
+                }
+                context.SaveChanges();
+            }
+        }
         public static object? GetDataFromItemsControl(ItemsControl source, Point point)
         {
             UIElement? element = source.InputHitTest(point) as UIElement;
@@ -128,15 +156,15 @@ namespace OpenCVVideoRedactor.Helpers
             image.Duration = TimeSpan.FromMilliseconds(1000.0 / project.VideoFps).Ticks;
             return image;
         }
-        public static void DropNotExistingResources(string dir, DatabaseContext context)
+        public static void DropNotExistingResources(Project project, DatabaseContext context)
         {
-            var resources = context.Resources;
+            var resources = context.Resources.Where(n=>n.ProjectId == project.Id);
             foreach (var resource in resources)
             {
-                var file = GetPathByType(dir, resource.Type, resource.Name);
+                var file = GetPathByType(project.DataFolder, resource.Type, resource.Name);
                 if (!File.Exists(file))
                 {
-                    MessageBox.Show(file);
+                    MessageBox.Show("Файл "+file+" не найден. Ресурс будет удалён");
                     context.Resources.Remove(resource);
                 }
             }

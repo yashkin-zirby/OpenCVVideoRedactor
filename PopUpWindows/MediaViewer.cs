@@ -7,6 +7,7 @@ using System.Windows.Threading;
 using System.IO;
 using FFMpegCore.Extensions.System.Drawing.Common;
 using OpenCVVideoRedactor.Model.Database;
+using FFMpegCore;
 
 namespace OpenCVVideoRedactor.PopUpWindows
 {
@@ -15,15 +16,16 @@ namespace OpenCVVideoRedactor.PopUpWindows
         public static void ShowDialog(string filePath, long type, SolidColorBrush? backgroud = null)
         {
             var showTrack = true;
+            var info = FFProbe.Analyse(filePath);
             var width = 800;
             var height = 600;
-            if (type == (int)ResourceType.IMAGE) { showTrack = false; }
-            if (type != (int)ResourceType.AUDIO) {
-                var snapshot = FFMpegImage.Snapshot(filePath);
-                width = snapshot.Width;
-                height = snapshot.Height;
-                snapshot.Dispose();
+            var duration = info.Duration;
+            if(info.PrimaryVideoStream != null)
+            {
+                width = info.PrimaryVideoStream.Width;
+                height = info.PrimaryVideoStream.Height;
             }
+            if (type == (int)ResourceType.IMAGE) { showTrack = false; }
             App.Current.Dispatcher.Invoke(() =>
             {
                 Window Box = new Window();
@@ -67,11 +69,18 @@ namespace OpenCVVideoRedactor.PopUpWindows
                     Grid.SetRow(timeController, 1);
                     content.MediaOpened += (sender, args) =>
                     {
-                        timeController.Maximum = content.NaturalDuration.TimeSpan.TotalSeconds;
+                        if (content.NaturalDuration.HasTimeSpan)
+                        {
+                            timeController.Maximum = content.NaturalDuration.TimeSpan.TotalSeconds;
+                        }
+                        else
+                        {
+                            timeController.Maximum = duration.TotalSeconds;
+                        }
                         timer.Interval = TimeSpan.FromSeconds(0.25);
                         timer.Tick += (sender, args) =>
                         {
-                            if (content.NaturalDuration.TimeSpan.TotalSeconds > 0)
+                            if (duration.TotalSeconds > 0)
                             {
                                 timeController.Value = content.Position.TotalSeconds;
                             }

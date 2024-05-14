@@ -8,7 +8,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Helpers\MediaElementExtension.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="DevExpressMvvm" Version="20.1.6" />
+    <PackageReference Include="Extended.Wpf.Toolkit" Version="4.6.0" />
     <PackageReference Include="FFMpegCore" Version="5.1.0" />
     <PackageReference Include="FFMpegCore.Extensions.System.Drawing.Common" Version="5.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.27" />
@@ -28,9 +33,24 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="ComplexMath">
+      <HintPath>C:\Users\100NOUT.BY\Desktop\OOP\ComplexMath\ComplexMath\bin\Debug\netcoreapp3.1\ComplexMath.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Update="View\FinishProjectCreationPage.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="FaceDetectionModels\deploy.prototxt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="FaceDetectionModels\face.caffemodel">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

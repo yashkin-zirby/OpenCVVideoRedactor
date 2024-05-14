@@ -1,4 +1,5 @@
 ﻿using DevExpress.Mvvm;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using OpenCVVideoRedactor.Model;
 using OpenCVVideoRedactor.View;
 using System;
@@ -18,6 +19,8 @@ namespace OpenCVVideoRedactor.ViewModel
         public Visibility IsVisibleSaveButton { get { return _projectInfo.ProjectInfo != null ? Visibility.Visible : Visibility.Collapsed; } }
         public Visibility IsVisibleImportButton { get { return _pageInfo.CurrentPage is MainPage ? Visibility.Visible : Visibility.Collapsed; } }
         public Visibility IsVisibleExportButton { get { return _pageInfo.CurrentPage is MainPage ? Visibility.Visible : Visibility.Collapsed; } }
+        public bool IsResourcesColumnVisible { get { return _projectInfo.IsResourcesColumnVisible; } set { _projectInfo.IsResourcesColumnVisible = value; } }
+        public bool IsPropertiesColumnVisible { get { return _projectInfo.IsPropertiesColumnVisible; } set { _projectInfo.IsPropertiesColumnVisible = value; } }
         public MainViewModel(PageInfo pageInfo, CreateProjectModel createProjectModel, CurrentProjectInfo projectInfo) {
             CurrentPage = new ProjectsListPage();
             _pageInfo = pageInfo;
@@ -41,6 +44,10 @@ namespace OpenCVVideoRedactor.ViewModel
             CurrentPage = _pageInfo.CurrentPage;
             RaisePropertiesChanged(nameof(IsVisibleExportButton), nameof(IsVisibleImportButton));
         }
+        public ICommand ExportVideo
+        {
+            get { return new DelegateCommand(() => { _projectInfo.CompileVideo(); }); }
+        }
         public ICommand ImportResource
         {
             get { return MainPageViewModel.AddResourceCommand; }
@@ -48,6 +55,10 @@ namespace OpenCVVideoRedactor.ViewModel
         public ICommand NavigateToProjectsListCommand
         {
             get { return new DelegateCommand(() => { _pageInfo.CurrentPage = new ProjectsListPage(); }); }
+        }
+        public ICommand AboutWindowShow
+        {
+            get { return new DelegateCommand(() => { _pageInfo.CurrentPage = new AboutPage(); }); }
         }
         public ICommand NavigateToCreatePage
         {

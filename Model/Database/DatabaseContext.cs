@@ -37,19 +37,14 @@ namespace OpenCVVideoRedactor.Model.Database
                 entity.ToTable("OPERATION");
 
                 entity.Property(e => e.Id)
-                    .ValueGeneratedNever()
                     .HasColumnName("ID");
 
                 entity.Property(e => e.Name)
                     .HasColumnName("NAME");
 
-                entity.Property(e => e.Next).HasColumnName("NEXT");
+                entity.Property(e => e.Source)
+                    .HasColumnName("SOURCE");
 
-                entity.Property(e => e.Source).HasColumnName("SOURCE");
-
-                entity.HasOne(d => d.NextNavigation)
-                    .WithMany(p => p.InverseNextNavigation)
-                    .HasForeignKey(d => d.Next);
 
                 entity.HasOne(d => d.SourceNavigation)
                     .WithMany(p => p.Operations)

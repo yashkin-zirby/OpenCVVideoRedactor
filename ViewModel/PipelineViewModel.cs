@@ -1,9 +1,11 @@
 ﻿using DevExpress.Mvvm;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using OpenCVVideoRedactor.Model;
+using OpenCVVideoRedactor.Model.Database;
 using OpenCVVideoRedactor.Pipeline;
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
@@ -16,15 +18,12 @@ namespace OpenCVVideoRedactor.ViewModel
         private CurrentProjectInfo _currentProject;
         private PipelineController? _controller = null;
         private bool _frameProcessing = false;
+        private long _selectedRectId = 0;
         private bool _isPlaying = false;
-        public bool IsPlaying { get { return _isPlaying; } }
+        public bool IsPlaying { get { return _isPlaying; } set{ /*_isPlaying = value;*/ RaisePropertiesChanged(nameof(IsPlaying),nameof(IsNotPlaying)); } }
         public bool IsNotPlaying { get { return !_isPlaying; } }
         public string? FilePath { get; set; }
         public ImageSource? CurrentFrame { get; set; }
-        public Thickness? CurrentResourcePossition { get; set; } = null;
-        public double SelectedResourceWidth { get { return _currentProject.SelectedResourceWidth; } }
-        public double SelectedResourceHeight { get { return _currentProject.SelectedResourceHeight; } }
-        public bool SelectedResourceVisible { get; set; }
         public long VideoWidth
         {
             get { return _currentProject.ProjectInfo!.VideoWidth; }
@@ -53,62 +52,92 @@ namespace OpenCVVideoRedactor.ViewModel
                 if (_currentProject.ProjectInfo != null) _currentProject.ProjectInfo.Background = color;
             }
         }
-        public PipelineViewModel(CurrentProjectInfo projectInfo) {
+        private VideoProcessingModel _processingModel;
+        public PipelineViewModel(CurrentProjectInfo projectInfo, VideoProcessingModel processingModel) {
             _currentProject = projectInfo;
+            _processingModel = processingModel;
             projectInfo.PropertyChanged += ProjectPropertyChanged;
             if (projectInfo.ProjectInfo != null)
             {
                 _controller = new PipelineController(projectInfo);
-                CurrentFrame = _controller.GetFrame(projectInfo.CurrentTime);
+                CurrentFrame = _controller.GetFrame(projectInfo.CurrentTime, _selectedRectId);
+            }
+            projectInfo.VideoCompileEvent += VideoCompile;
+        }
+
+        private void VideoCompile(object? sender, EventArgs e)
+        {
+            if(_controller != null && !_processingModel.IsProcessing)
+            {
+                Task.Factory.StartNew(() => {
+                    _processingModel.IsProcessing = true;
+                    _controller.GenerateVideo((time, duration) => { _processingModel.CurrentProcessingValue = time; _processingModel.MaxProcessingValue = duration; });
+                    _processingModel.IsProcessing = false;
+                    IsPlaying = _controller.VideoIsReady;
+                });
             }
         }
 
+        private readonly object _currentTimeChanged = new object();
         private void ProjectPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             RaisePropertiesChanged(e.PropertyName);
-            if(e.PropertyName == nameof(_currentProject.CurrentTime) && !_frameProcessing)
+            if(e.PropertyName == nameof(_currentProject.CurrentTime))
             {
-                _frameProcessing = true;
+                lock (_currentTimeChanged)
+                    Monitor.PulseAll(_currentTimeChanged);
+                Task.Run(() =>
+                {
+                    lock (_currentTimeChanged)
+                        if (!Monitor.Wait(_currentTimeChanged, 1000))
+                        {
+                            while (_frameProcessing) Thread.Sleep(10);
+                            _frameProcessing = true;
+                            if (_controller != null)
+                            {
+                                var img = _controller.GetFrame(_currentProject.CurrentTime, _selectedRectId);
+                                img.Freeze();
+                                CurrentFrame = img;
+                            };
+                            _frameProcessing = false;
+                        }
+                });
+                if (_frameProcessing) return;
                 Task.Factory.StartNew(() => {
+                    _frameProcessing = true;
                     if (_controller != null)
                     {
-                        var time = _currentProject.CurrentTime;
-                        var img = _controller.GetFrame(_currentProject.CurrentTime);
+                        var img = _controller.GetFrame(_currentProject.CurrentTime, _selectedRectId);
                         img.Freeze();
                         CurrentFrame = img;
-                        _frameProcessing = false;
-                        if (_currentProject.CurrentTime != time)
-                        {
-                            img = _controller.GetFrame(_currentProject.CurrentTime);
-                            img.Freeze();
-                            CurrentFrame = img;
-                        }
                     };
-                    SelectedResourceVisible = _currentProject.SelectedResource != null && _currentProject.SelectedResource.StartTime != null ?
-                        _currentProject.CurrentTime.Ticks >= _currentProject.SelectedResource.StartTime.Value &&
-                        _currentProject.CurrentTime.Ticks <= _currentProject.SelectedResource.Duration + _currentProject.SelectedResource.StartTime.Value
-                        : false;
                     _frameProcessing = false;
                 });
                 return;
             }
-            if(e.PropertyName == nameof(_currentProject.SelectedResource))
+            if (e.PropertyName == nameof(_currentProject.SelectedResource) && _currentProject.SelectedResourceInUse != null)
             {
-                SelectedResourceVisible = _currentProject.SelectedResource != null && _currentProject.SelectedResource.StartTime != null ?
-                    _currentProject.CurrentTime.Ticks >= _currentProject.SelectedResource.StartTime.Value &&
-                    _currentProject.CurrentTime.Ticks <= _currentProject.SelectedResource.Duration + _currentProject.SelectedResource.StartTime.Value
-                    : false;
-                CurrentResourcePossition = _currentProject.SelectedResource == null? null:
-                    new Thickness(_currentProject.SelectedResource.PossitionX, _currentProject.SelectedResource.PossitionY, 0, 0);
+                while (_frameProcessing) Thread.Sleep(10);
+                var resource = _currentProject.SelectedResourceInUse.Resource;
+                if (_controller != null)
+                {
+                    _selectedRectId = resource.Id;
+                    _controller.UpdatePipelineFor(resource);
+                    IsPlaying = _controller.VideoIsReady;
+                    var img = _controller.GetFrame(_currentProject.CurrentTime, _selectedRectId);
+                    img.Freeze();
+                    CurrentFrame = img;
+                };
             }
-            if (e.PropertyName == nameof(_currentProject.ResourcesInUse) && !_frameProcessing)
+            if (e.PropertyName == nameof(_currentProject.ResourcesInUse))
             {
-                _frameProcessing = true;
                 Task.Factory.StartNew(() => {
+                    while (_frameProcessing) Thread.Sleep(10);
+                    _frameProcessing = true;
                     if (_controller != null && _controller.UpdateResourceList(_currentProject.ResourcesInUse))
                     {
-                        var time = _currentProject.CurrentTime;
-                        var img = _controller.GetFrame(time);
+                        IsPlaying = _controller.VideoIsReady;
+                        var img = _controller.GetFrame(_currentProject.CurrentTime, _selectedRectId);
                         img.Freeze();
                         CurrentFrame = img;
                     };
@@ -120,6 +149,7 @@ namespace OpenCVVideoRedactor.ViewModel
         ~PipelineViewModel()
         {
             _currentProject.PropertyChanged -= ProjectPropertyChanged;
+            _currentProject.VideoCompileEvent -= VideoCompile;
         }
     }
 }

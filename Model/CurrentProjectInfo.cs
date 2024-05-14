@@ -4,10 +4,13 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
+using System.Threading;
 using System.Windows;
 using FFMpegCore;
 using Microsoft.EntityFrameworkCore;
 using OpenCVVideoRedactor.Model.Database;
+using OpenCVVideoRedactor.View;
 
 namespace OpenCVVideoRedactor.Model
 {
@@ -16,6 +19,7 @@ namespace OpenCVVideoRedactor.Model
         private Project? _projectInfo = null;
         private List<Resource> _resources = new List<Resource>();
         private Resource? _selectedResource = null;
+        private Operation? _selectedOperation = null;
         private ResourceInUse? _selectedResourceInUse = null;
         private TimeSpan _currentTime = TimeSpan.Zero;
         public string? ImagesDir { get { return _projectInfo != null ? Path.Combine(_projectInfo.DataFolder, "images") : null; } }
@@ -39,6 +43,26 @@ namespace OpenCVVideoRedactor.Model
                 RaisePropertiesChanged(nameof(ProjectInfo));
             }
         }
+        private bool _resourcesVisible = true;
+        private bool _propertiesVisible = true;
+        public bool IsPropertiesColumnVisible
+        {
+            get { return _propertiesVisible; }
+            set
+            {
+                _propertiesVisible = value;
+                RaisePropertiesChanged(nameof(IsPropertiesColumnVisible));
+            }
+        }
+        public bool IsResourcesColumnVisible
+        {
+            get { return _resourcesVisible; }
+            set
+            {
+                _resourcesVisible = value;
+                RaisePropertiesChanged(nameof(IsResourcesColumnVisible));
+            }
+        }
         public Resource? SelectedResource
         {
             get { return _selectedResource; }
@@ -46,8 +70,21 @@ namespace OpenCVVideoRedactor.Model
             {
                 _selectedResource = value;
                 _selectedResourceInUse = _resourceInUses.Count() > 0 && value != null ? _resourceInUses.FirstOrDefault(n => n.Resource.Id == value.Id) : null;
-                RaisePropertiesChanged(nameof(SelectedResource), nameof(MaxDuration), nameof(SelectedResourceWidth),
-                    nameof(SelectedResourceHeight));
+                RaisePropertiesChanged(nameof(SelectedResource), nameof(MaxDuration));
+            }
+        }
+        public Operation? SelectedOperation
+        {
+            get { return _selectedOperation; }
+            set {
+                
+                _selectedOperation = value;
+                if (_selectedOperation != null)
+                {
+                    var changed = new ModifyOperationView().ShowDialog();
+                    _selectedOperation = null;
+                    if(changed.HasValue && changed.Value)NoticeResourceUpdated(null);
+                }
             }
         }
         public ResourceInUse? SelectedResourceInUse
@@ -57,28 +94,16 @@ namespace OpenCVVideoRedactor.Model
                 return _selectedResourceInUse;
             }
         }
-        public double SelectedResourceWidth { 
-            get
-            {
-                return _selectedResourceInUse != null && _selectedResourceInUse.ActualWidth != null?
-                    _selectedResourceInUse.ActualWidth.Value : 0;
-            } 
-        }
-        public double SelectedResourceHeight
-        {
-            get
-            {
-                return _selectedResourceInUse != null && _selectedResourceInUse.ActualHeight != null ?
-                    _selectedResourceInUse.ActualHeight.Value : 0;
-            }
-        }
+        
         public void NoticeResourceUpdated(DatabaseContext? context)
         {
-            RaisePropertiesChanged(nameof(SelectedResource), nameof(MaxDuration));
-            if(context != null && ProjectInfo != null)
-                Resources = context.Resources.Where(n=>n.ProjectId == ProjectInfo.Id).ToList();
+            var selected = SelectedResource;
+            if (context != null && ProjectInfo != null)
+                Resources = context.Resources.Where(n => n.ProjectId == ProjectInfo.Id)
+                    .Include(n => n.Variables).Include(n => n.Operations).ThenInclude(n => n.Parameters).ToList();                
             else
                 Resources = Resources.Select(x => x).ToList();
+            SelectedResource = selected;
         }
         public long MaxDuration
         {
@@ -126,11 +151,15 @@ namespace OpenCVVideoRedactor.Model
                                 case ResourceType.VIDEO: dir = VideosDir; break;
                             }
                             var info = FFProbe.Analyse(Path.Combine(dir, resource.Resource.Name));
-                            resource.ActualDuration = info.Duration;
                             if(info.PrimaryVideoStream != null)
                             {
+                                resource.ActualDuration = info.PrimaryVideoStream.Duration;
                                 resource.ActualWidth = info.PrimaryVideoStream.Width;
                                 resource.ActualHeight = info.PrimaryVideoStream.Height;
+                            }
+                            if(info.PrimaryAudioStream != null)
+                            {
+                                resource.ActualDuration = info.PrimaryAudioStream.Duration;
                             }
                         }
                         catch(Exception ex)
@@ -167,5 +196,10 @@ namespace OpenCVVideoRedactor.Model
             }
         }
         public event PropertyChangedEventHandler? PropertyChanged;
+        public event EventHandler? VideoCompileEvent;
+        public void CompileVideo()
+        {
+            if (VideoCompileEvent != null) VideoCompileEvent.Invoke(null,new EventArgs());
+        }
     }
 }

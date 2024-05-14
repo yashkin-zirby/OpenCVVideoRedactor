@@ -6,16 +6,15 @@
              xmlns:local="clr-namespace:OpenCVVideoRedactor.View"
              DataContext="{Binding PipelineViewModel, Source={StaticResource ServiceLocatorObject}}"
              mc:Ignorable="d">
-    
-    <Viewbox HorizontalAlignment="Center" VerticalAlignment="Center" MaxHeight="{Binding VideoHeight}" MaxWidth="{Binding VideoWidth}">
-        <Border BorderBrush="Black" BorderThickness="2" ClipToBounds="True">
-            <Grid HorizontalAlignment="Center" VerticalAlignment="Center" 
-                Width="{Binding VideoWidth}" Height="{Binding VideoHeight}">
-                <MediaElement Width="{Binding VideoWidth}" Height="{Binding VideoHeight}" Source="{Binding FilePath}" Visibility="{Binding IsPlaying, Converter={StaticResource BoolToVisibility}}"/>
-                <Image Width="{Binding VideoWidth}" Height="{Binding VideoHeight}" Source="{Binding CurrentFrame}" Visibility="{Binding IsNotPlaying, Converter={StaticResource BoolToVisibility}}"/>
-                <Border BorderBrush="Aqua" BorderThickness="2" Margin="{Binding CurrentResourcePossition}" Background="Transparent" Visibility="{Binding SelectedResourceVisible, Converter={StaticResource BoolToVisibility}}"
-                    HorizontalAlignment="Left" VerticalAlignment="Top" Width="{Binding SelectedResourceWidth}" Height="{Binding SelectedResourceHeight}"/>
-            </Grid>
-        </Border>
-    </Viewbox>
+
+    <Grid ClipToBounds="True">
+        <Viewbox x:Name="MediaView" HorizontalAlignment="Center" VerticalAlignment="Center"  MaxHeight="{Binding VideoHeight}" MaxWidth="{Binding VideoWidth}">
+            <Border BorderBrush="Black" BorderThickness="2">
+                <Canvas Width="{Binding VideoWidth}" Height="{Binding VideoHeight}">
+                    <MediaElement Width="{Binding VideoWidth}" Height="{Binding VideoHeight}" Source="{Binding FilePath}" Visibility="{Binding IsPlaying, Converter={StaticResource BoolToVisibility}}"/>
+                    <Image Width="{Binding VideoWidth}" Height="{Binding VideoHeight}" Source="{Binding CurrentFrame}" Visibility="{Binding IsNotPlaying, Converter={StaticResource BoolToVisibility}}"/>
+                </Canvas>
+            </Border>
+        </Viewbox>
+    </Grid>
 </UserControl>

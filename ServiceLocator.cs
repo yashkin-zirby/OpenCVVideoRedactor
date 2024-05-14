@@ -26,6 +26,7 @@ namespace OpenCVVideoRedactor
         {
             services.AddSingleton<CurrentProjectInfo>();
             services.AddSingleton<CreateProjectModel>();
+            services.AddSingleton<VideoProcessingModel>();
             services.AddSingleton<PageInfo>();
             services.AddSingleton<DatabaseContext>();
         }
@@ -39,6 +40,8 @@ namespace OpenCVVideoRedactor
             services.AddTransient<TimelineControlViewModel>();
             services.AddTransient<PipelineViewModel>();
             services.AddTransient<SplitResourceViewModel>();
+            services.AddTransient<ModifyOperationViewModel>();
+            services.AddTransient<ClonePipelineViewModel>();
             InitModels(services); 
 
             _provider = services.BuildServiceProvider();
@@ -59,5 +62,7 @@ namespace OpenCVVideoRedactor
         public MainViewModel MainViewModel => _provider!.GetRequiredService<MainViewModel>();
         public PipelineViewModel PipelineViewModel => _provider!.GetRequiredService<PipelineViewModel>();
         public SplitResourceViewModel SplitResourceViewModel => _provider!.GetRequiredService<SplitResourceViewModel>();
+        public ModifyOperationViewModel ModifyOperationViewModel => _provider!.GetRequiredService<ModifyOperationViewModel>();
+        public ClonePipelineViewModel ClonePipelineViewModel => _provider!.GetRequiredService<ClonePipelineViewModel>();
     }
 }

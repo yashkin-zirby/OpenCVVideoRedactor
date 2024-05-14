@@ -1,0 +1,61 @@
+﻿<Window x:Class="OpenCVVideoRedactor.View.ClonePipelineWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+        xmlns:local="clr-namespace:OpenCVVideoRedactor.View"
+        xmlns:db="clr-namespace:OpenCVVideoRedactor.Model.Database"
+        DataContext="{Binding ClonePipelineViewModel, Source={StaticResource ServiceLocatorObject}}"
+        mc:Ignorable="d"
+        Title="ClonePipelineWindow" Height="400" Width="600">
+    <i:Interaction.Triggers>
+        <i:EventTrigger EventName="Loaded">
+            <i:InvokeCommandAction Command="{Binding AttachCloseMethod}" PassEventArgsToCommand="True"/>
+        </i:EventTrigger>
+    </i:Interaction.Triggers>
+    <Grid Background="#595965">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="20"/>
+            <RowDefinition Height="20"/>
+            <RowDefinition/>
+            <RowDefinition Height="40"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="5*"/>
+            <ColumnDefinition Width="3*"/>
+        </Grid.ColumnDefinitions>
+        <TextBlock Grid.ColumnSpan="2" Style="{StaticResource InfoTextBlock}" HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="14">
+            Клонирование существующего конвеера обработки
+        </TextBlock>
+        <TextBlock Grid.Row="1" Grid.Column="0" Style="{StaticResource InfoTextBlock}" HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="14">
+            Существующие конвееры
+        </TextBlock>
+        <ListBox Grid.Row="2" Grid.Column="0"  Background="#494959" ItemsSource="{Binding PipelineSources}" SelectedValue="{Binding SelectedResource}">
+            <ListBox.ItemTemplate>
+                <DataTemplate DataType="db:Resource">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Style="{StaticResource InfoTextBlock}">Конвеер ресурса</TextBlock>
+                        <TextBlock Style="{StaticResource InfoTextBlock}" Margin="10,0,0,0" Text="{Binding Name}"></TextBlock>
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        <TextBlock Grid.Row="1" Grid.Column="1" Style="{StaticResource InfoTextBlock}" HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="14">
+            Список операций в конвеере
+        </TextBlock>
+        <ListBox Grid.Row="2" Grid.Column="1" Background="#494959" ItemsSource="{Binding SelectedResource.Operations}">
+            <ListBox.ItemTemplate>
+                <DataTemplate DataType="db:Operation">
+                    <TextBlock Style="{StaticResource InfoTextBlock}" Margin="10,0,0,0" Text="{Binding Converter={StaticResource OperationConverter}}"></TextBlock>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        <Button Grid.Row="3" Grid.ColumnSpan="2" Command="{Binding ClonePipeline}">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock>Скопировать выбранный конвеер в</TextBlock>
+                <TextBlock Margin="10,0,0,0" Text="{Binding Resource.Name}"></TextBlock>
+            </StackPanel>
+        </Button>
+    </Grid>
+</Window>

@@ -5,6 +5,7 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:OpenCVVideoRedactor.View"
       xmlns:db="clr-namespace:OpenCVVideoRedactor.Model.Database"
+      xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
       mc:Ignorable="d" 
       DataContext="{Binding ProjectListsViewModel, Source={StaticResource ServiceLocatorObject}}"
       d:DesignHeight="450" d:DesignWidth="800"
@@ -16,10 +17,15 @@
             <RowDefinition Height="25px"/>
         </Grid.RowDefinitions>
         <ScrollViewer>
-            <ListView Background="#595965" ItemsSource="{Binding Projects}" SelectedIndex="{Binding SelectedProjectIndex}">
+            <ListView Background="#595965" ItemsSource="{Binding Projects}" SelectedIndex="{Binding SelectedProjectIndex}" HorizontalContentAlignment="Stretch">
+                <i:Interaction.Triggers>
+                    <i:EventTrigger EventName="PreviewMouseDoubleClick">
+                        <i:InvokeCommandAction Command="{Binding OpenSelectedProject}"/>
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>
                 <ListView.ItemTemplate>
                     <DataTemplate DataType="db:Project">
-                        <TextBlock Text="{Binding Path=DataFolder}" FontSize="12" Foreground="#F0F0FF"/>
+                        <TextBlock Background="#494949" Padding="5,2" Text="{Binding Path=DataFolder}" FontSize="14" Foreground="#F0F0FF"/>
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
@@ -27,5 +33,29 @@
         <Button Grid.Row="1" HorizontalAlignment="Left" Width="160" Command="{Binding NavigateToCreatePage}">Создать новый проект</Button>
         <Button Grid.Row="1" HorizontalAlignment="Center" Width="160" IsEnabled="{Binding ProjectIsSelected}" Command="{Binding DeleteSelectedProject}">Удалить проект</Button>
         <Button Grid.Row="1" HorizontalAlignment="Right" Width="160" IsEnabled="{Binding ProjectIsSelected}" Command="{Binding OpenSelectedProject}">Открыть</Button>
+        <Border Grid.ColumnSpan="3" Grid.RowSpan="3" Background="#88444455" Visibility="{Binding LoaderVisibility}">
+            <Ellipse Width="100" Height="100" StrokeThickness="3" RenderTransformOrigin="0.5, 0.5" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Ellipse.Stroke>
+                    <LinearGradientBrush EndPoint="0.3,1" StartPoint="0.3,0">
+                        <GradientStop Color="#000033" Offset="0"/>
+                        <GradientStop Color="#E0E0FF" Offset="1"/>
+                    </LinearGradientBrush>
+                </Ellipse.Stroke>
+                <Ellipse.RenderTransform>
+                    <RotateTransform/>
+                </Ellipse.RenderTransform>
+                <Ellipse.Triggers>
+                    <EventTrigger RoutedEvent="Loaded">
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimation
+                        Storyboard.TargetProperty="(Ellipse.RenderTransform).(RotateTransform.Angle)"
+                        To="360" Duration="0:0:1" RepeatBehavior="Forever" />
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </EventTrigger>
+                </Ellipse.Triggers>
+            </Ellipse>
+        </Border>
     </Grid>
 </Page>

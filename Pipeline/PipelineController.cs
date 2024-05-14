@@ -16,31 +16,27 @@ using FFMpegCore.Extensions.System.Drawing.Common;
 using OpenCvSharp.Extensions;
 using OpenCVVideoRedactor.Helpers;
 using DevExpress.Mvvm.Native;
+using Microsoft.Win32;
 
 namespace OpenCVVideoRedactor.Pipeline
 {
-    public class PipelineController : BindableBase
+    public class PipelineController
     {
         private List<ResourceInUse> _resources = new List<ResourceInUse>();
         private Dictionary<long, FrameProcessingPipeline> _pipelines = new Dictionary<long, FrameProcessingPipeline>();
+        private Dictionary<long, MediaStorage> _media = new Dictionary<long, MediaStorage>();
         private Mat _background;
-        private bool _videoIsReady = false;
-        private string _videoDir;
-        private string _audioDir;
-        private string _imageDir;
-        private double _fps;
+        private Project project;
+        public bool VideoIsReady { get; private set; } = false;
         public PipelineController(CurrentProjectInfo projectInfo) {
             if (projectInfo.ProjectInfo == null) throw new Exception("Не найден проект");
-            _resources = projectInfo.ResourcesInUse.Where(n=>n.Resource.Type != (int)ResourceType.AUDIO).ToList();
-
-            foreach (var resource in _resources)
+            _resources = projectInfo.ResourcesInUse.ToList();
+            project = projectInfo.ProjectInfo;
+            foreach (var resource in _resources.Where(n => n.Resource.IsNotAudio))
             {
                 _pipelines[resource.Resource.Id] = new FrameProcessingPipeline(resource.Resource);
+                _media[resource.Resource.Id] = new MediaStorage(resource, project);
             }
-            _imageDir = Path.Combine(projectInfo.ProjectInfo.DataFolder,"images");
-            _audioDir = Path.Combine(projectInfo.ProjectInfo.DataFolder, "audios");
-            _videoDir = Path.Combine(projectInfo.ProjectInfo.DataFolder, "videos");
-            _fps = projectInfo.ProjectInfo.VideoFps;
             var r = (byte)((projectInfo.ProjectInfo.Background >> 16) & 255);
             var g = (byte)((projectInfo.ProjectInfo.Background >> 8) & 255);
             var b = (byte)(projectInfo.ProjectInfo.Background & 255);
@@ -50,9 +46,10 @@ namespace OpenCVVideoRedactor.Pipeline
         public bool UpdateResourceList(IEnumerable<ResourceInUse> resources)
         {
             var changed = false;
-            foreach(var resource in resources)
+            foreach(var resource in resources.Where(n=>n.Resource.IsNotAudio))
             {
-                var resourcePrev = _resources.FirstOrDefault();
+                if(!_media.ContainsKey(resource.Resource.Id)) _media[resource.Resource.Id] = new MediaStorage(resource, project);
+                var resourcePrev = _resources.FirstOrDefault(n=>n.Resource.Id == resource.Resource.Id);
                 if(resourcePrev == null || resource.Resource.IsPropertiesChanged(resourcePrev.Resource))
                 {
                     _pipelines[resource.Resource.Id] = new FrameProcessingPipeline(resource.Resource);
@@ -60,28 +57,60 @@ namespace OpenCVVideoRedactor.Pipeline
                 }
             }
             _resources = resources.ToList();
+            foreach (var key in _media.Keys.ToList())
+            {
+                if (!_resources.Any(n => n.Resource.Id == key))
+                {
+                    _media[key].Dispose();
+                    _media.Remove(key);
+                    changed = true;
+                }
+            }
+            if (changed) VideoIsReady = false;
             return changed;
         }
         public void UpdatePipelineFor(Resource resource)
         {
-            _pipelines[resource.Id] = new FrameProcessingPipeline(resource);
+            if (resource.IsNotAudio)
+            {
+                _pipelines[resource.Id] = new FrameProcessingPipeline(resource);
+                VideoIsReady = false;
+            }
         }
-        public BitmapSource GetFrame(TimeSpan time)
+        public BitmapSource GetFrame(TimeSpan time, long selectedRectId = 0)
         {
             var frame = _background.Clone();
-            foreach(var overlayFrame in _resources.Select(n => ConvertToFrame(n, time)))
+            var frameRect = new OpenCvSharp.Rect(0, 0, 0, 0);
+            foreach(var overlayFrame in _resources.Where(n=>n.Resource.IsNotAudio).Select(n => ConvertToFrame(n, time, project)))
             {
                 if(overlayFrame != null)
                 {
-                    var resultFrame = _pipelines[overlayFrame.Id].Apply(overlayFrame);
-                    var x = resultFrame.Variables["x"];
-                    var y = resultFrame.Variables["y"];
-                    frame = frame.DrawMat(resultFrame.Image, new Point(x, y));
+                    var resultFrame = overlayFrame;
+                    try
+                    {
+                        resultFrame = _pipelines[overlayFrame.Id].Apply(overlayFrame);
+                    }catch(Exception e) {
+                        System.Windows.MessageBox.Show("Один из операторов конвеера выдал ошибку:"+e.Message);
+                    }
+                    if (resultFrame != null)
+                    {
+                        var x = resultFrame.Variables["x"];
+                        var y = resultFrame.Variables["y"];
+                        frame = frame.DrawMat(resultFrame.Image, new OpenCvSharp.Point(x, y));
+                        if (resultFrame.Id == selectedRectId) frameRect = new OpenCvSharp.Rect((int)x, (int)y, resultFrame.Image.Width,resultFrame.Image.Height);
+                    }
                 }
             }
+            if(frameRect.Width > 0 && frameRect.Height > 0)frame.Rectangle(frameRect, Scalar.Aqua, 1);
             return BitmapSourceConverter.ToBitmapSource(frame);
         }
-        private Frame? ConvertToFrame(ResourceInUse resource, TimeSpan time)
+        public static List<string> GetVariables(ResourceInUse resource)
+        {
+            var result = new List<string>() {"x","y","time","duration","frame","width","height" };
+            resource.Resource.Variables.ForEach(n => result.Add(n.Name));
+            return result;
+        }
+        public Frame? ConvertToFrame(ResourceInUse resource, TimeSpan time, Project info)
         {
             if (time.Ticks >= resource.Resource.StartTime && time.Ticks <= resource.Resource.StartTime + resource.Resource.Duration)
             {
@@ -90,35 +119,112 @@ namespace OpenCVVideoRedactor.Pipeline
                 {
                     { "x", resource.Resource.PossitionX },
                     { "y", resource.Resource.PossitionY },
-                    { "time", time.Ticks },
-                    { "frame",  (int)((time.Ticks-resource.Resource.StartTime.Value)*_fps/10000000)},
+                    { "time", time.TotalSeconds },
+                    { "duration", resource.Resource.Duration},
+                    { "frame",  (int)((time.Ticks-resource.Resource.StartTime.Value)*info.VideoFps/10000000)},
                 };
                 resource.Resource.Variables.ForEach(n => variables.Add(n.Name,n.Value));
-                switch ((ResourceType)resource.Resource.Type)
-                {
-                    case ResourceType.IMAGE:
-                        return new Frame(id,new Mat(Path.Combine(_imageDir, resource.Resource.Name), ImreadModes.Unchanged), variables);
-                    case ResourceType.VIDEO:
-                        if (resource.ActualDuration != null)
-                        {
-                            var duration = resource.ActualDuration.Value;
-                            duration = duration - TimeSpan.FromMilliseconds(1000 / _fps);
-                            time = new TimeSpan(Math.Min(duration.Ticks, time.Ticks - resource.Resource.StartTime.Value));
-                        }
-                        else
-                        {
-                            var duration = FFProbe.Analyse(Path.Combine(_videoDir, resource.Resource.Name)).Duration;
-                            duration = duration - TimeSpan.FromMilliseconds(1000 / _fps);
-                            time = new TimeSpan(Math.Min(duration.Ticks, time.Ticks - resource.Resource.StartTime.Value));
-                        }
-                        var image = FFMpegImage.Snapshot(Path.Combine(_videoDir, resource.Resource.Name), null, time);
-                        return new Frame(id,BitmapConverter.ToMat(image), variables);
-                }
+                var mat = _media[id].GetFrame(time);
+                if (mat == null) return null;
+                variables["width"] = mat.Width;
+                variables["height"] = mat.Height;
+                return new Frame(id, mat, variables);
             }
             return null;
         }
-        public void GenerateVideo() {
-            
+        public async void GenerateVideo(Action<long, long> callback) {
+            if (_resources.Count == 0) return;
+            var tempFile = System.IO.Path.Combine(project.DataFolder, "temp_output.mp4");
+            var output = System.IO.Path.Combine(project.DataFolder, "output.mp4");
+            if (!VideoIsReady)
+            {
+                var Duration = _resources[0].MaxDuration;
+                using (var writer = new VideoWriter())
+                {
+                    //MP42
+                    if(!writer.Open(tempFile, FourCC.H264, project.VideoFps, new OpenCvSharp.Size(project.VideoWidth, project.VideoHeight))){
+                        var works = false;
+                        System.Windows.MessageBox.Show("Кодек по умолчанию не работает. Попытка поменять кодек");
+                        foreach (var codec in new FourCC[] { FourCC.MP42, FourCC.DIVX, FourCC.AVC, FourCC.CVID, FourCC.MJPG })
+                        {
+                            if(writer.Open(tempFile, codec, project.VideoFps, new OpenCvSharp.Size(project.VideoWidth, project.VideoHeight)))
+                            {
+                                works = true; break;
+                            }
+                        }
+                        if (!works)
+                        {
+                            System.Windows.MessageBox.Show("Ни один из используемых кодеков не поддерживается");
+                            return;
+                        }
+                    }
+                    long ticksPerFrame = (long)10000000.0 / project.VideoFps;
+                    int frameI = 0;
+                    for (long i = 0; i < Duration; i += ticksPerFrame)
+                    {
+                        Mat frame = _background.Clone();
+                        foreach (var resource in _resources.Where(n => n.Resource.IsNotAudio))
+                        {
+                            if (i >= resource.Resource.StartTime && i <= resource.Resource.StartTime + resource.Resource.Duration)
+                            {
+                                long id = resource.Resource.Id;
+                                var variables = new Dictionary<string, double>
+                            {
+                                { "x", resource.Resource.PossitionX },
+                                { "y", resource.Resource.PossitionY },
+                                { "time", TimeSpan.FromTicks(i).TotalSeconds },
+                                { "duration", resource.Resource.Duration},
+                                { "frame",  frameI},
+                            };
+                                frameI++;
+                                resource.Resource.Variables.ForEach(n => variables.Add(n.Name, n.Value));
+                                var mat = _media[id].GetFrame(TimeSpan.FromTicks(i));
+                                if (mat != null)
+                                {
+                                    variables["width"] = mat.Width;
+                                    variables["height"] = mat.Height;
+                                    var applied = _pipelines[id].Apply(new Frame(id, mat, variables));
+                                    if (applied != null)
+                                    {
+                                        frame = frame.DrawMat(applied.Image, new OpenCvSharp.Point(applied.Variables["x"], applied.Variables["y"]));
+                                    }
+                                }
+                            }
+                            callback.Invoke(i, Duration);
+                        }
+                        writer.Write(frame);
+                    }
+                }
+                if (File.Exists(tempFile))
+                {
+                    var args = FFMpegArguments.FromFileInput(tempFile, true, (arg) => { arg.WithCustomArgument("-f lavfi -i anullsrc=channel_layout=stereo:sample_rate=44100"); })
+                             .OutputToFile(output, true, options =>
+                         options.WithCustomArgument("-c:v copy -c:a aac -shortest"));
+                    await args.ProcessAsynchronously();
+                    File.Delete(tempFile);
+                    foreach (var audio in _resources.Where(n => !n.Resource.IsNotAudio))
+                    {
+                        var delay = audio.Resource.StartTime != null ? TimeSpan.FromTicks(audio.Resource.StartTime.Value) : TimeSpan.Zero;
+                        var fileName = System.IO.Path.Combine(project.DataFolder, "audios", audio.Resource.Name);
+                        var audioArgs = FFMpegArguments.FromFileInput(output, true)
+                                 .AddFileInput(fileName)
+                                 .OutputToFile(tempFile, true, options =>
+                             options.WithCustomArgument($"-filter_complex \"[1:a]adelay={delay.TotalSeconds}s:all=1[a1];[0:a][a1]amix\""));
+                        await audioArgs.ProcessAsynchronously();
+                        File.Delete(output);
+                        File.Move(tempFile, output);
+                    }
+                }
+            }
+            SaveFileDialog saveFileDialog = new SaveFileDialog();
+            saveFileDialog.Filter = "video files|*.mp4;*.avi";
+            var value = saveFileDialog.ShowDialog();
+            if (value.HasValue && value.Value)
+            {
+                if (output == saveFileDialog.FileName) return;
+                await FFMpegArguments.FromFileInput(output).OutputToFile(saveFileDialog.FileName, true).ProcessAsynchronously();
+            }
+            VideoIsReady = true;
         }
     }
 }

@@ -19,6 +19,7 @@ namespace OpenCVVideoRedactor.ViewModel
         private CurrentProjectInfo _currentProjectInfo;
         private DatabaseContext _dbContext;
         private double _scale = 0;
+        private double _fps = 30;
         public double Scale { 
             get {
                 return _scale;
@@ -36,18 +37,29 @@ namespace OpenCVVideoRedactor.ViewModel
                 _currentProjectInfo.CurrentTime = value;
             }
         }
+        public int CurrentFrame
+        {
+            get { return (int)(_currentProjectInfo.CurrentTime.Ticks * _fps / 10000000); }
+            set
+            {
+                _currentProjectInfo.CurrentTime = TimeSpan.FromTicks((long)Math.Round(value * (10000000.0 / _fps)));
+                RaisePropertyChanged(nameof(CurrentTimeTicks));
+            }
+        }
         public long CurrentTimeTicks
         {
             get { return _currentProjectInfo.CurrentTime.Ticks; }
             set
             {
                 _currentProjectInfo.CurrentTime = new TimeSpan(value);
+                RaisePropertyChanged(nameof(CurrentFrame));
             }
         }
         public long MaxDuration
         {
             get { return _currentProjectInfo.MaxDuration; }
         }
+        public Visibility StartTextVisibility { get { return _currentProjectInfo.ResourcesInUse.Count() > 0 ? Visibility.Collapsed : Visibility.Visible; } }
         public IEnumerable<ResourceInUse> ResourcesInUse { get { return _currentProjectInfo.ResourcesInUse; } }
         public bool IsResourceSelected { get { return _currentProjectInfo.SelectedResource != null && _currentProjectInfo.SelectedResource.IsInUse; } }
         public ResourceInUse? SelectedResource
@@ -73,6 +85,10 @@ namespace OpenCVVideoRedactor.ViewModel
             if(eventArgs.PropertyName == nameof(_currentProjectInfo.SelectedResource)) {
                 RaisePropertyChanged(nameof(IsResourceSelected));
             }
+            if(eventArgs.PropertyName == nameof(_currentProjectInfo.ResourcesInUse))
+            {
+                RaisePropertyChanged(nameof(StartTextVisibility));
+            }
         }
         public ICommand SplitResourceCommand
         {
@@ -83,6 +99,27 @@ namespace OpenCVVideoRedactor.ViewModel
                     {
                         new SplitResourceWindow().ShowDialog();
                     }
+                });
+            }
+        }
+        public ICommand ClonePipelineCommand
+        {
+            get
+            {
+                return new DelegateCommand(() => {
+                    if (_currentProjectInfo.SelectedResource != null && _currentProjectInfo.SelectedResource.StartTime != null)
+                    {
+                        new ClonePipelineWindow().ShowDialog();
+                    }
+                });
+            }
+        }
+        public ICommand CompileVideoCommand
+        {
+            get
+            {
+                return new DelegateCommand(() => {
+                    _currentProjectInfo.CompileVideo();
                 });
             }
         }
@@ -100,7 +137,7 @@ namespace OpenCVVideoRedactor.ViewModel
                 });
             }
         }
-        public void OnDataDropped(IDataObject data)
+        public void OnDataDropped(IDataObject data, object? dropSourceObject = null)
         {
             var resource = data.GetData(typeof(Resource)) as Resource;
             if (resource != null)

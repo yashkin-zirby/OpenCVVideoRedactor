@@ -1,0 +1,46 @@
+﻿<Window x:Class="OpenCVVideoRedactor.View.ModifyOperationView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+        xmlns:local="clr-namespace:OpenCVVideoRedactor.View"
+        mc:Ignorable="d"
+        MinWidth="400" Height="Auto" SizeToContent="WidthAndHeight" ResizeMode="CanMinimize"
+        DataContext="{Binding ModifyOperationViewModel, Source={StaticResource ServiceLocatorObject}}"
+        Title="ModifyOperationView">
+    <i:Interaction.Triggers>
+        <i:EventTrigger EventName="Loaded">
+            <i:InvokeCommandAction Command="{Binding GenerateView}" PassEventArgsToCommand="True"/>
+        </i:EventTrigger>
+    </i:Interaction.Triggers>
+    <Window.Resources>
+        <Style x:Key="ModifyText" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#F0F0F0"/>
+            <Setter Property="FontSize" Value="14"/>
+        </Style>
+    </Window.Resources>
+    <StackPanel Background="#494949">
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <TextBlock Style="{StaticResource ModifyText}" Text="{Binding ActionType}"/>
+            <TextBlock Style="{StaticResource ModifyText}" Margin="5,0,0,0">операции</TextBlock>
+            <TextBlock Style="{StaticResource ModifyText}" Margin="5,0,0,0" Text="{Binding Operation.Name}"/>
+        </StackPanel>
+        <StackPanel x:Name="Inputs">
+            
+        </StackPanel>
+        <Grid Height="75">
+            <TextBlock Background="#696974" VerticalAlignment="Top" Foreground="#F0F0F0" 
+                       TextAlignment="Center" Padding="0,20,0,10" FontSize="16" Text="{Binding Operation.Name}"/>
+            <Polygon Points="0,0,400,0,200,15" Fill="Gray"></Polygon>
+            <Polygon Points="0,0,400,0,200,25" Margin="0,20,0,0" Fill="Gray" VerticalAlignment="Bottom"></Polygon>
+            <!--<TextBlock Foreground="#F0F0F0" VerticalAlignment="Bottom" Text="выходные параметры" TextAlignment="Center" Margin="10"/>-->
+        </Grid>
+        <StackPanel x:Name="Outputs">
+            
+        </StackPanel>
+        <Button Background="#393949" Height="30" Margin="20,10" Command="{Binding ApplyCommand}">
+            <TextBlock Style="{StaticResource ModifyText}" Text="Применить"/>
+        </Button>
+    </StackPanel>
+</Window>

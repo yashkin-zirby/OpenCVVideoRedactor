@@ -4,15 +4,19 @@ using Ookii.Dialogs.Wpf;
 using OpenCVVideoRedactor.Helpers;
 using OpenCVVideoRedactor.Model;
 using OpenCVVideoRedactor.Model.Database;
+using OpenCVVideoRedactor.Pipeline;
+using OpenCVVideoRedactor.Pipepline;
 using OpenCVVideoRedactor.PopUpWindows;
 using OpenCVVideoRedactor.View;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Printing;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -29,9 +33,13 @@ namespace OpenCVVideoRedactor.ViewModel
         public double ResourcesWidth { get; set; } = 200;
         public double PropertiesWidth { get; set; } = 200;
         public double TimelineHeight { get; set; } = 200;
+        public bool IsPropertiesColumnVisible { get { return _currentProject.IsPropertiesColumnVisible; } }
+        public bool IsResourcesColumnVisible { get { return _currentProject.IsResourcesColumnVisible; } }
         public bool IsResourcesWidthChanging { get; set; } = false;
         public bool IsTimelineHeightChanging { get; set; } = false;
         public bool IsPropertiesWidthChanging { get; set; } = false;
+        public string NewVariableName { get; set; } = "";
+        public double NewVariableValue { get; set; } = 0;
         public IEnumerable<Resource> Images { 
             get {
                 return _currentProject.Images;
@@ -56,6 +64,20 @@ namespace OpenCVVideoRedactor.ViewModel
             get { return _currentProject.SelectedResource; } 
             set {
                 _currentProject.SelectedResource = value;
+            } 
+        }
+        public bool HasVariable { get { return SelectedVariable != null; } }
+        public IEnumerable<IFrameOperation?> AvailableOperations { get { return FrameProcessingPipeline.GetOperations(); } }
+        public IFrameOperation? Operation { get; set; } = null;
+        public Variable? SelectedVariable { get; set; } = null;
+        public List<Operation> ResourceOperations { get; set; } = new List<Operation>();
+        public List<Variable> ResourceVariables { 
+            get {
+                var variables = SelectedResource != null ? 
+                    _dbContext.Variables.Where(n => n.Resource == SelectedResource.Id).ToList()
+                    : new List<Variable>();
+                if(variables.Count>0) SelectedVariable = variables[0];
+                return variables;
             } 
         }
         public string SelectedResourceName
@@ -125,27 +147,38 @@ namespace OpenCVVideoRedactor.ViewModel
                 }
             }
         }
+        public bool IsProcessing { get { return _processingModel.IsProcessing; } }
+        public long CurrentProcessingValue { get { return _processingModel.CurrentProcessingValue; } }
+        public long MaxProcessingValue { get { return _processingModel.MaxProcessingValue; } }
         public Visibility LoaderVisibility { get; set; } = Visibility.Collapsed;
         public static MainPageViewModel? Instance { get; private set; } = null;
-
-        public MainPageViewModel(DatabaseContext dbContext, PageInfo pageInfo, CurrentProjectInfo currentProject)
+        private VideoProcessingModel _processingModel;
+        public MainPageViewModel(DatabaseContext dbContext, PageInfo pageInfo, CurrentProjectInfo currentProject, VideoProcessingModel processingModel)
         {
             _dbContext = dbContext;
             _currentProject = currentProject;
-            if(_currentProject.ProjectInfo == null)
+            _processingModel = processingModel;
+            if (_currentProject.ProjectInfo == null)
             {
                 pageInfo.CurrentPage = new ProjectsListPage();
                 return;
             }
-            ResourceHelper.DropNotExistingResources(_currentProject.ProjectInfo.DataFolder,dbContext);
+            ResourceHelper.DropNotExistingResources(_currentProject.ProjectInfo,dbContext);
             _currentProject.PropertyChanged += ProjectPropertiesChanged;
-            _currentProject.Resources = _dbContext.Resources.Where(n => n.ProjectId == _currentProject.ProjectInfo.Id).ToList();
+            _processingModel.PropertyChanged += ProjectPropertiesChanged;
+            UpdateResourceList();
             Instance = this;
+        }
+        private void UpdateResourceList()
+        {
+            _currentProject.Resources = _dbContext.Resources.Where(n => n.ProjectId == _currentProject.ProjectInfo.Id)
+                .Include(n=>n.Variables).Include(n => n.Operations).ThenInclude(n=>n.Parameters).ToList();
         }
         ~MainPageViewModel()
         {
             Instance = null;
             _currentProject.PropertyChanged -= ProjectPropertiesChanged;
+            _processingModel.PropertyChanged -= ProjectPropertiesChanged;
         }
         private void ProjectPropertiesChanged(object? sender, PropertyChangedEventArgs eventArgs)
         {
@@ -153,13 +186,97 @@ namespace OpenCVVideoRedactor.ViewModel
             if(eventArgs.PropertyName == nameof(SelectedResource))
             {
                 RaisePropertiesChanged(nameof(SelectedResourceStartTime), nameof(SelectedResourceDuration), nameof(ItemIsSelected), nameof(SelectedResourceName));
+                RaisePropertyChanged(nameof(ResourceVariables));
+                RaisePropertyChanged(nameof(HasVariable));
+                ResourceOperations = SelectedResource != null ?
+                    _dbContext.Operations.Where(n => n.Source == SelectedResource.Id).OrderBy(n=>n.Index).ToList()
+                    : new List<Operation>();
             }
         }
         public static ICommand AddResourceCommand
         { 
             get {
-                return Instance == null? new DelegateCommand(() => { }): Instance.AddResource;
+                return new DelegateCommand(() => { if(Instance != null)Instance.AddResource.Execute(null); });
             } 
+        }
+        public ICommand CreateNewVariable
+        {
+            get
+            {
+                Regex validateVariableName = new Regex("^[A-Za-z]+[_0-9]*$",RegexOptions.Singleline);
+                return new DelegateCommand(() => {
+                if (SelectedResource != null)
+                {
+                    if (NewVariableName.Length == 0)
+                    {
+                        return;
+                    }
+                    if (!validateVariableName.IsMatch(NewVariableName))
+                    {
+                        MessageBox.Show($"Название переменной должно начинаться с буквы английского алфавита" +
+                            $" и не должно сожержать никаких других символов кроме цифр и символа '_'");
+                        return;
+                    }
+                    if (NewVariableName == "x" || NewVariableName == "y" || NewVariableName == "time" || NewVariableName == "duration" ||
+                           NewVariableName == "frame" || NewVariableName == "width" || NewVariableName == "height")
+                        {
+                            MessageBox.Show($"Переменная '{NewVariableName}' зарезервирована");
+                            return;
+                        }
+                        if(!SelectedResource.Variables.Any(n=>n.Name == NewVariableName))
+                        {
+                            var variable = new Variable();
+                            variable.Name = NewVariableName;
+                            variable.Value = NewVariableValue;
+                            variable.Resource = SelectedResource.Id;
+                            _dbContext.Variables.Add(variable);
+                            _dbContext.SaveChanges();
+                            NewVariableName = "";
+                            NewVariableValue = 0;
+                            var resource = SelectedResource;
+                            SelectedResource = null;
+                            SelectedResource = resource;
+                        }
+                        else
+                        {
+                            MessageBox.Show($"Переменная '{NewVariableName}' уже существует");
+                        }
+                    }
+                });
+            }
+        }
+        public ICommand OperationSelected
+        {
+            get
+            {
+                return new DelegateCommand<SelectionChangedEventArgs>((e) => {
+                    var listBox = e.Source as ListBox;
+                    if (listBox != null)
+                    {
+                        _currentProject.SelectedOperation = listBox.SelectedValue as Operation;
+                        listBox.UnselectAll();
+                    }
+                });
+            }
+        }
+        public ICommand AddOperation
+        {
+            get
+            {
+                return new DelegateCommand(() => {
+                    if (Operation != null && SelectedResource != null)
+                    {
+                        if(Operation != null)
+                        {
+                            var operation = Operation.GetOperation();
+                            _currentProject.SelectedOperation = operation;
+                            _currentProject.NoticeResourceUpdated(null);
+                            return;
+                        }
+                        MessageBox.Show("Выбранная операция не поддерживатеся");
+                    }
+                });
+            }
         }
         public ICommand AddResource
         {
@@ -182,7 +299,7 @@ namespace OpenCVVideoRedactor.ViewModel
                                     AddFile(file);
                                 }
                                 LoaderVisibility = Visibility.Collapsed;
-                                _currentProject.Resources = _dbContext.Resources.Where(n => n.ProjectId == _currentProject.ProjectInfo.Id).ToList();
+                                UpdateResourceList();
                             });
                         }
                     }
@@ -196,7 +313,8 @@ namespace OpenCVVideoRedactor.ViewModel
                 return new DelegateCommand(() => {
                     if (SelectedResource != null)
                     {
-                        if(MessageBox.Show($"Удалить '{SelectedResource.Name}'?\nЭто действие нельзя отменить",
+                        var name = SelectedResource.Name;
+                        if (MessageBox.Show($"Удалить '{name}'?",
                             "Удаление ресурса",MessageBoxButton.OKCancel) == MessageBoxResult.OK)
                         {
                             _dbContext.Resources.Remove(SelectedResource);
@@ -204,12 +322,26 @@ namespace OpenCVVideoRedactor.ViewModel
                             {
                                 var typeResources = _types[SelectedResource.Type];
                                 var dir = Path.Combine(_currentProject.ProjectInfo!.DataFolder, typeResources);
-                                File.Delete(Path.Combine(dir, SelectedResource.Name));
-                                _currentProject.Resources = _dbContext.Resources.Where(n => n.ProjectId == _currentProject.ProjectInfo.Id).ToList();
+                                UpdateResourceList();
+                                DeleteFile(Path.Combine(dir, name));
                             }
                         }
                     }
                 });
+            }
+        }
+        public static void DeleteFile(String fileToDelete)
+        {
+            while(File.Exists(fileToDelete))
+            {
+                try
+                {
+                    File.Delete(fileToDelete);
+                }
+                catch
+                {
+                    System.Threading.Thread.Sleep(100);
+                }
             }
         }
         public ICommand SaveProperties
@@ -259,6 +391,39 @@ namespace OpenCVVideoRedactor.ViewModel
                 }); 
             }
         }
+        public ICommand DoDragOperationCommand
+        {
+            get
+            {
+                return new DelegateCommand<MouseButtonEventArgs>((e) => {
+                    var parrent = e.Source as ItemsControl;
+                    if (parrent != null && _currentProject.ProjectInfo != null)
+                    {
+                        var point = e.GetPosition(parrent);
+                        var operation = ResourceHelper.GetDataFromItemsControl(parrent, e.GetPosition(parrent)) as Operation;
+                        if (operation != null)
+                        {
+                            if (parrent.ActualWidth - point.X >= 7 && parrent.ActualWidth - point.X <= 27)
+                            {
+                                var op = _dbContext.Operations.FirstOrDefault(n => n.Name == operation.Name && n.Source == operation.Source);
+                                if(op != null)
+                                {
+                                    _dbContext.Operations.Remove(op);
+                                    _dbContext.SaveChanges();
+                                    var list = _dbContext.Operations.Where(n => n.Source == op.Source && n.Index > op.Index).ToList();
+                                    list.ForEach(n => { n.Index = n.Index - 1; });
+                                    _dbContext.Operations.UpdateRange(list);
+                                    _dbContext.SaveChanges();
+                                    _currentProject.NoticeResourceUpdated(_dbContext);
+                                    return;
+                                }
+                            }
+                            DragDrop.DoDragDrop(parrent, operation, DragDropEffects.Move);
+                        }
+                    }
+                });
+            }
+        }
         public ICommand ResizeWindow
         {
             get
@@ -284,8 +449,24 @@ namespace OpenCVVideoRedactor.ViewModel
                 });
             }
         }
-        public void OnDataDropped(IDataObject data)
+        public void OnDataDropped(IDataObject data, object? dropSourceObject = null)
         {
+            var operation = data.GetData(typeof(Operation)) as Operation;
+            var source = dropSourceObject as Operation;
+            if (operation != null && source != null)
+            {
+                var first = _dbContext.Operations.FirstOrDefault(n => n.Id == operation.Id);
+                var second = _dbContext.Operations.FirstOrDefault(n => n.Id == source.Id);
+                if(first != null && second != null)
+                {
+                    var index = first.Index;
+                    first.Index = second.Index;
+                    second.Index = index;
+                    _dbContext.SaveChanges();
+                    _currentProject.NoticeResourceUpdated(null);
+                }
+                return;
+            }
             if (data.GetDataPresent(DataFormats.FileDrop))
             {
                 var files = data.GetData(DataFormats.FileDrop) as string[];
@@ -298,7 +479,7 @@ namespace OpenCVVideoRedactor.ViewModel
                             AddFile(file);
                         }
                         LoaderVisibility = Visibility.Collapsed;
-                        _currentProject.Resources = _dbContext.Resources.Where(n => n.ProjectId == _currentProject.ProjectInfo.Id).ToList();
+                        UpdateResourceList();
                     });
                 }
             }

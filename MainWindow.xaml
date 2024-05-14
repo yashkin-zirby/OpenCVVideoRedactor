@@ -7,7 +7,7 @@
         xmlns:local="clr-namespace:OpenCVVideoRedactor"
         mc:Ignorable="d"
         DataContext="{Binding MainViewModel, Source={StaticResource ServiceLocatorObject}}"
-        Title="OpenCVVideoRedactor" Height="600" Width="1000" 
+        Title="OpenCVVideoRedactor" Height="700" Width="1050" 
         WindowStyle="None">
     <Window.Resources>
         <Style x:Key="ToolbarButton" TargetType="Button">
@@ -38,13 +38,19 @@
                         <MenuItem Header="Создать проект" Background="#494949" Foreground="#EEE" Height="25" Command="{Binding NavigateToCreatePage}"/>
                         <MenuItem Header="Открыть проект" Background="#494949" Foreground="#EEE" Height="25" Command="{Binding NavigateToProjectsListCommand}"/>
                         <MenuItem Header="Импорт" Background="#494949" Foreground="#EEE" Height="25" Visibility="{Binding IsVisibleImportButton}" Command="{Binding ImportResource}"/>
-                        <MenuItem Header="Сохранить" Background="#494949" Foreground="#EEE" Height="25" Visibility="{Binding IsVisibleSaveButton}"/>
-                        <MenuItem Header="Экспорт" Background="#494949" Foreground="#EEE" Height="25" Visibility="{Binding IsVisibleExportButton}"/>
+                        <MenuItem Header="Экспорт" Background="#494949" Foreground="#EEE" Height="25" Visibility="{Binding IsVisibleExportButton}" Command="{Binding ExportVideo}"/>
                         <MenuItem Header="Выйти" Background="#494949" Foreground="#EEE" Height="25" Command="cmd:ApplicationCloseCommand.Instance"/>
                     </MenuItem>
                     <MenuItem Header="Вид" Style="{StaticResource MenuItemTemplate}" Height="25">
+                        <CheckBox IsChecked="{Binding IsResourcesColumnVisible}">
+                            <TextBlock Foreground="#F0F0F0">Показать/скрыть панель ресурсов</TextBlock>
+                        </CheckBox>
+                        <CheckBox IsChecked="{Binding IsPropertiesColumnVisible}">
+                            <TextBlock Foreground="#F0F0F0">Показать/скрыть панель свойств</TextBlock>
+                        </CheckBox>
                     </MenuItem>
                     <MenuItem Header="Справка" Style="{StaticResource MenuItemTemplate}" Height="25">
+                        <MenuItem Header="О программе" Background="#494949" Foreground="#EEE" Height="25" Command="{Binding AboutWindowShow}"/>
                     </MenuItem>
                 </Menu>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">

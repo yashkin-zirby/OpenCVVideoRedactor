@@ -4,12 +4,13 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:system="clr-namespace:System;assembly=mscorlib"
       xmlns:h="clr-namespace:OpenCVVideoRedactor.Helpers"
       xmlns:local="clr-namespace:OpenCVVideoRedactor.View"
-      xmlns:vm="clr-namespace:OpenCVVideoRedactor.ViewModel"
+      xmlns:db="clr-namespace:OpenCVVideoRedactor.Model.Database"
       mc:Ignorable="d" 
       DataContext="{Binding MainPageViewModel, Source={StaticResource ServiceLocatorObject}}"
-      d:DesignHeight="450" d:DesignWidth="800"
+      d:DesignHeight="700" d:DesignWidth="1050"
       Title="MainPage">
     <Page.Resources>
         <Style x:Key="FileListExpander" TargetType="Expander">
@@ -23,32 +24,6 @@
             <Setter Property="BorderBrush" Value="#353539"/>
             <Setter Property="Background" Value="#404040"/>
         </Style>
-        <Style x:Key="PropertyTextBox" TargetType="TextBox">
-            <Setter Property="Foreground" Value="#F0F0F0"/>
-            <Setter Property="MinWidth" Value="50"/>
-            <Setter Property="TextAlignment" Value="Center"/>
-            <Setter Property="Background" Value="#393943"/>
-            <Setter Property="FontSize" Value="12"/>
-        </Style>
-        <Style x:Key="ResourceButton" TargetType="Button">
-            <Setter Property="Foreground" Value="#F0F0F0"/>
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="Background" Value="#555559"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="{x:Type Button}">
-                        <Border Background="{TemplateBinding Background}" BorderBrush="#494959" BorderThickness="1">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#292939"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
     </Page.Resources>
     <Grid Background="#595965">
         <Grid.RowDefinitions>
@@ -56,9 +31,31 @@
             <RowDefinition Height="{Binding TimelineHeight}"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="{Binding ResourcesWidth}"/>
+            <ColumnDefinition>
+                <ColumnDefinition.Style>
+                    <Style TargetType="ColumnDefinition">
+                        <Setter Property="Width" Value="{Binding ResourcesWidth}" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsResourcesColumnVisible}" Value="False">
+                                <Setter Property="Width" Value="0" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </ColumnDefinition.Style>
+            </ColumnDefinition>
             <ColumnDefinition/>
-            <ColumnDefinition Width="{Binding PropertiesWidth}"/>
+            <ColumnDefinition>
+                <ColumnDefinition.Style>
+                    <Style TargetType="ColumnDefinition">
+                        <Setter Property="Width" Value="{Binding PropertiesWidth}" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsPropertiesColumnVisible}" Value="False">
+                                <Setter Property="Width" Value="0" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </ColumnDefinition.Style>
+            </ColumnDefinition>
         </Grid.ColumnDefinitions>
         <i:Interaction.Behaviors>
             <h:FocusOnClickBehavior/>
@@ -71,7 +68,7 @@
                 <i:InvokeCommandAction Command="{Binding EndResizeWindow}"/>
             </i:EventTrigger>
         </i:Interaction.Triggers>
-        <StackPanel Background="#393943" h:DropFilesBehaviorExtension.IsEnabled ="True">
+        <StackPanel Background="#393943" h:DropBehaviorExtension.IsEnabled ="True">
             <TextBlock Foreground="#F0F0F0" TextAlignment="Center" FontSize="14" Background="#404550">Ресурсы проекта</TextBlock>
             <Grid Height="24">
                 <Grid.ColumnDefinitions>
@@ -89,7 +86,7 @@
                         </i:EventTrigger>
                     </i:Interaction.Triggers>
                     <ListBox.ItemTemplate>
-                        <DataTemplate DataType="db:Project">
+                        <DataTemplate DataType="db:Resource">
                             <TextBlock Text="{Binding Path=Name}" FontSize="12" Foreground="#F0F0FF">
                             </TextBlock>
                         </DataTemplate>
@@ -104,7 +101,7 @@
                         </i:EventTrigger>
                     </i:Interaction.Triggers>
                     <ListBox.ItemTemplate>
-                        <DataTemplate DataType="db:Project">
+                        <DataTemplate DataType="db:Resource">
                             <TextBlock Text="{Binding Path=Name}" FontSize="12" Foreground="#F0F0FF">
                             </TextBlock>
                         </DataTemplate>
@@ -119,7 +116,7 @@
                         </i:EventTrigger>
                     </i:Interaction.Triggers>
                     <ListBox.ItemTemplate>
-                        <DataTemplate DataType="db:Project">
+                        <DataTemplate DataType="db:Resource">
                             <TextBlock Text="{Binding Path=Name}" FontSize="12" Foreground="#F0F0FF">
                             </TextBlock>
                         </DataTemplate>
@@ -134,51 +131,101 @@
                 </i:EventTrigger>
             </i:Interaction.Triggers>
         </Border>
-        <TextBlock Grid.Row="0" Grid.Column="1" Foreground="AliceBlue" TextAlignment="Center" FontSize="16">Пердпросмотр итогового видео</TextBlock>
-        <local:PipelineView Grid.Row="0" Grid.Column="1" Margin="10,30,10,5"/>
+        <TextBlock Grid.Row="0" VerticalAlignment="Top" Height="20" Grid.Column="1" Foreground="AliceBlue" Background="#797979" TextAlignment="Center" FontSize="16">Предпросмотр итогового видео</TextBlock>
+        <local:PipelineView Grid.Row="0" Grid.Column="1" Margin="0,20,0,0"/>
         <Grid Grid.Column="2" Background="#393943">
             <TextBlock Foreground="#F0F0F0" TextAlignment="Center" VerticalAlignment="Top" FontSize="14" Background="#404550">Свойства</TextBlock>
-            <StackPanel Visibility="{Binding ItemIsSelected, Converter={StaticResource BoolToVisibility}}" Margin="0,20,0,0" Background="#393943">
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,10">
+            <DockPanel Visibility="{Binding ItemIsSelected, Converter={StaticResource BoolToVisibility}}" Margin="0,20,0,20" Background="#393943">
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5">
                     <TextBlock Foreground="#F0F0F0" TextAlignment="Center" FontSize="12">Имя файла:</TextBlock>
                     <TextBox Style="{StaticResource PropertyTextBox}" Margin="5,0" Text="{Binding SelectedResourceName}"></TextBox>
                 </StackPanel>
-                <TextBlock Foreground="#F0F0F0" TextAlignment="Center" FontSize="12" Text="Позиция на экране" Margin="0,0,0,5"/>
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,10" 
+                <TextBlock DockPanel.Dock="Top" Foreground="#F0F0F0" TextAlignment="Center" FontSize="12" Text="Позиция на экране" Margin="0,0,0,5"/>
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,10" 
                             Visibility="{Binding SelectedResource.IsNotAudio, Converter={StaticResource BoolToVisibility}}">
                     <TextBlock Foreground="#F0F0F0" TextAlignment="Center" FontSize="12">X</TextBlock>
                     <TextBox IsEnabled="{Binding SelectedResource.IsInUse}" Style="{StaticResource PropertyTextBox}" Margin="5,0" Text="{Binding SelectedResource.PossitionX}"></TextBox>
                     <TextBlock Foreground="#F0F0F0" TextAlignment="Center" FontSize="12">Y</TextBlock>
                     <TextBox IsEnabled="{Binding SelectedResource.IsInUse}" Style="{StaticResource PropertyTextBox}" Margin="5,0" Text="{Binding SelectedResource.PossitionY}"></TextBox>
                 </StackPanel>
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,10">
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,10">
                     <TextBlock Foreground="#F0F0F0" TextAlignment="Center" FontSize="12">Начало</TextBlock>
                     <TextBox IsEnabled="{Binding SelectedResource.IsInUse}" Style="{StaticResource PropertyTextBox}" Margin="5,0" Text="{Binding SelectedResourceStartTime}"></TextBox>
                 </StackPanel>
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,10"
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,10"
                             IsEnabled="{Binding SelectedResource.IsNotAudio}">
                     <TextBlock Foreground="#F0F0F0" TextAlignment="Center" FontSize="12">Длительность</TextBlock>
                     <TextBox IsEnabled="{Binding SelectedResource.IsInUse}" Style="{StaticResource PropertyTextBox}" Margin="5,0" Text="{Binding SelectedResourceDuration}"></TextBox>
                 </StackPanel>
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,10">
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,10">
                     <TextBlock Foreground="#F0F0F0" TextAlignment="Center" FontSize="12">Слой</TextBlock>
                     <TextBox IsEnabled="{Binding SelectedResource.IsInUse}" Style="{StaticResource PropertyTextBox}" Margin="5,0" Text="{Binding SelectedResource.Layer}"></TextBox>
                 </StackPanel>
-                <Button Style="{StaticResource ResourceButton}" Command="{Binding SaveProperties}">Сохранить</Button>
-                <Grid Visibility="{Binding SelectedResource.IsNotAudio,Converter={StaticResource BoolToVisibility}}" IsEnabled="{Binding SelectedResource.IsNotAudio}">
-                    <TextBlock></TextBlock>
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Background="#DDE" Margin="0,10,0,10">
-                        <Expander Header="x" Background="{x:Null}" BorderThickness="0">
-                            <ListBox>
-                                <TextBlock>x</TextBlock>
-                                <TextBlock>y</TextBlock>
+                <TextBlock DockPanel.Dock="Top" Foreground="#F0F0F0" TextAlignment="Center" VerticalAlignment="Top" FontSize="14" Background="#404550">Связанные переменные</TextBlock>
+                <Canvas Panel.ZIndex="1" DockPanel.Dock="Top" Margin="-100,5,0,5" HorizontalAlignment="Center" Height="70" Visibility="{Binding SelectedResource.IsNotAudio,Converter={StaticResource BoolToVisibility}}" IsEnabled="{Binding SelectedResource.IsInUse}">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Top" Height="20">
+                        <TextBlock Foreground="#F0F0F0" Width="60">Название</TextBlock>
+                        <TextBlock Foreground="#F0F0F0" Width="60">Значение</TextBlock>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,20" Height="20">
+                        <TextBox Margin="1,0" Style="{StaticResource PropertyTextBox}" Text="{Binding NewVariableName}"></TextBox>
+                        <TextBox Margin="1,0" Style="{StaticResource PropertyTextBox}" Text="{Binding NewVariableValue}"></TextBox>
+                        <Button Style="{StaticResource ResourceButton}" Width="20" Command="{Binding CreateNewVariable}">+</Button>
+                    </StackPanel>
+                    <Canvas HorizontalAlignment="Center" Margin="0,45" Visibility="{Binding HasVariable, Converter={StaticResource BoolToVisibility}}">
+                        <Expander Margin="0,0,0,0" Background="#393943" HorizontalAlignment="Center" BorderBrush="#222232" BorderThickness="0" IsExpanded="False">
+                            <Expander.Header>
+                                <TextBlock TextAlignment="Right" MinWidth="20" Margin="0,-2,0,0" Foreground="#F0F0F0" FontSize="14" FontWeight="Bold" Text="{Binding SelectedVariable.Name}"/>
+                            </Expander.Header>
+                            <ListBox Background="#393943" HorizontalContentAlignment="Stretch" BorderThickness="2,2,2,2" BorderBrush="#222232"
+                                     ItemsSource="{Binding ResourceVariables}" SelectedValue="{Binding SelectedVariable}">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate DataType="db:Variable">
+                                        <TextBlock TextAlignment="Right" Foreground="#F0F0F0" FontSize="14" FontWeight="Bold" Text="{Binding Name}"/>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
                             </ListBox>
                         </Expander>
-                        <TextBlock VerticalAlignment="Top" Height="20" Background="{x:Null}" TextAlignment="Center" Width="20">=</TextBlock>
-                        <TextBox VerticalAlignment="Top" Height="20" Background="{x:Null}" Text="{Binding ResourcesWidth}"></TextBox>
-                    </StackPanel>
+                        <TextBox Margin="80,0,0,0" VerticalAlignment="Top" HorizontalAlignment="Center" Height="20" Background="{x:Null}" Style="{StaticResource PropertyTextBox}" Text="{Binding SelectedVariable.Value}"></TextBox>
+                    </Canvas>
+                </Canvas>
+                <Grid DockPanel.Dock="Top" Visibility="{Binding SelectedResource.IsNotAudio, Converter={StaticResource BoolToVisibility}}" IsEnabled="{Binding SelectedResource.IsInUse}">
+                    <TextBlock Foreground="#F0F0F0" TextAlignment="Center" VerticalAlignment="Top" FontSize="14" Background="#404550">Конвейер обработки</TextBlock>
+                    <ComboBox Height="25" VerticalAlignment="Top" FontSize="12" Margin="0,20,25,0" ItemsSource="{Binding AvailableOperations}" SelectedValue="{Binding Operation}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate DataType="{x:Type system:Type}">
+                                <TextBlock Text="{Binding Converter={StaticResource OperationConverter}}" VerticalAlignment="Center"></TextBlock>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <Button Height="25" Width="25" Style="{StaticResource ResourceButton}" Margin="0,20,0,0"
+                            VerticalAlignment="Top" HorizontalAlignment="Right" Command="{Binding AddOperation}">+</Button>
+                    <ListBox ItemsSource="{Binding ResourceOperations}" Margin="0,45,0,0" VerticalAlignment="Top" Style="{StaticResource FileList}" HorizontalContentAlignment="Stretch"
+                             h:DropBehaviorExtension.IsEnabled="True" h:DropBehaviorExtension.DataType="db:Operation">
+                        <i:Interaction.Triggers>
+                            <i:EventTrigger EventName="PreviewMouseLeftButtonDown">
+                                <i:InvokeCommandAction Command="{Binding DoDragOperationCommand}" PassEventArgsToCommand="True"/>
+                            </i:EventTrigger>
+                            <i:EventTrigger EventName="SelectionChanged">
+                                <i:InvokeCommandAction Command="{Binding OperationSelected}" PassEventArgsToCommand="True"/>
+                            </i:EventTrigger>
+                        </i:Interaction.Triggers>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate DataType="db:Operation">
+                                <StackPanel Height="20" Orientation="Horizontal" HorizontalAlignment="Right">
+                                    <TextBlock Text="{Binding Converter={StaticResource OperationConverter}}" VerticalAlignment="Center" FontSize="12" Foreground="#F0F0FF"/>
+                                    <Border BorderBrush="#393949" BorderThickness="2,0,0,0" Margin="5,0,5,0">
+                                        <TextBlock Text="{Binding Path=Index}" HorizontalAlignment="Right" VerticalAlignment="Center" TextAlignment="Right" Width="45" FontSize="12" Foreground="#F0F0FF"/>
+                                    </Border>
+                                    <Button Height="20" Width="20" Style="{StaticResource ResourceButton}"
+                                        VerticalAlignment="Top" HorizontalAlignment="Right" Command="{Binding AddOperation}">-</Button>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
                 </Grid>
-            </StackPanel>
+            </DockPanel>
+            <Button Height="20" VerticalAlignment="Bottom" Style="{StaticResource ResourceButton}" Command="{Binding SaveProperties}">Сохранить</Button>
         </Grid>
         <Border Grid.Column="2" HorizontalAlignment="Left" Width="3" Background="Gray" Cursor="SizeWE">
             <i:Interaction.Triggers>
@@ -195,6 +242,9 @@
                 </i:EventTrigger>
             </i:Interaction.Triggers>
         </Border>
+        <Grid Grid.ColumnSpan="3" Grid.RowSpan="3" Background="#88444455" Visibility="{Binding IsProcessing, Converter={StaticResource BoolToVisibility}}">
+            <ProgressBar Value="{Binding CurrentProcessingValue, Mode=OneWay}" Maximum="{Binding MaxProcessingValue, Mode=OneWay}" Height="40"></ProgressBar>
+        </Grid>
         <Border Grid.ColumnSpan="3" Grid.RowSpan="3" Background="#88444455" Visibility="{Binding LoaderVisibility}">
             <Ellipse Width="100" Height="100" StrokeThickness="3" RenderTransformOrigin="0.5, 0.5" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <Ellipse.Stroke>

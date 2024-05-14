@@ -1,10 +1,12 @@
 ﻿<UserControl x:Class="OpenCVVideoRedactor.View.TimelineControl"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:h="clr-namespace:OpenCVVideoRedactor.Helpers"
              xmlns:m="clr-namespace:OpenCVVideoRedactor.Model"
+             xmlns:db="clr-namespace:OpenCVVideoRedactor.Model.Database"
              xmlns:local="clr-namespace:OpenCVVideoRedactor.View"
              DataContext="{Binding TimelineControlViewModel, Source={StaticResource ServiceLocatorObject}}"
              mc:Ignorable="d" 
@@ -63,12 +65,13 @@
             <ColumnDefinition Width="100"/>
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
-        <StackPanel Orientation="Horizontal">
-            <Button Style="{StaticResource ControlButton}" Width="25" Height="{Binding RelativeSource={RelativeSource Mode=Self}, Path=ActualWidth}">
-
-            </Button>
-        </StackPanel>
+        <Button Style="{StaticResource ControlButton}" Margin="2,0" Height="25" Command="{Binding CompileVideoCommand}">
+            Собрать видео
+        </Button>
         <StackPanel Grid.Column="1" Orientation="Horizontal">
+            <TextBlock Style="{StaticResource ControlText}" VerticalAlignment="Center" HorizontalAlignment="Left" Text="Кадр" Margin="0,0,5,0"/>
+            <TextBox Style="{StaticResource InputTextBox}" VerticalAlignment="Center" Margin="0,0,5,0" HorizontalAlignment="Left" Width="50" Text="{Binding CurrentFrame}">
+            </TextBox>
             <TextBox Style="{StaticResource InputTextBox}" VerticalAlignment="Center" HorizontalAlignment="Left" Width="100" Text="{Binding CurrentTime}">
             </TextBox>
             <TextBlock Style="{StaticResource ControlText}" VerticalAlignment="Center" HorizontalAlignment="Left" Text="10%" Margin="10,0,0,0"/>
@@ -82,11 +85,14 @@ HorizontalAlignment="Right" Width="200" TickPlacement="TopLeft" Value="{Binding 
             <Button Style="{StaticResource ControlButton}" IsEnabled="{Binding IsResourceSelected}" Height="25" Command="{Binding SplitResourceCommand}">
                 <TextBlock Style="{StaticResource ControlText}" Background="{x:Null}" Text="Разбить на фрагменты" Padding="5,0"/>
             </Button>
+            <Button Style="{StaticResource ControlButton}" IsEnabled="{Binding IsResourceSelected}" Height="25" Command="{Binding ClonePipelineCommand}">
+                <TextBlock Style="{StaticResource ControlText}" Background="{x:Null}" Text="Клонировать конвеер" Padding="5,0"/>
+            </Button>
         </StackPanel>
         <TextBlock Grid.Row="1" Margin="0,10,16,0" FontSize="14" Style="{StaticResource ControlText}">Слои</TextBlock>
         <ScrollViewer Grid.Row="1" Margin="0,32,0,16" h:ScrollSynchronizer.ScrollGroup="TimelineScroll">
-            <ListBox Style="{StaticResource TimelineResourcesView}" h:DropFilesBehaviorExtension.IsEnabled="True"
-                ItemsSource="{Binding ResourcesInUse}" SelectedValue="{Binding SelectedResource}">
+            <ListBox Style="{StaticResource TimelineResourcesView}" h:DropBehaviorExtension.IsEnabled="True" h:DropBehaviorExtension.DataType="db:Resource"
+                     ItemsSource="{Binding ResourcesInUse}" SelectedValue="{Binding SelectedResource}">
                 <ListBox.ItemTemplate>
                     <DataTemplate DataType="m:ResourceInUse">
                         <Grid Background="#A9A988" Margin="-6,0" Width="{Binding RelativeSource={RelativeSource AncestorType=ListBox},Path=ActualWidth}">
@@ -108,8 +114,8 @@ HorizontalAlignment="Right" Width="200" TickPlacement="TopLeft" Value="{Binding 
                     </Slider.Width>
                 </Slider>
                 <ScrollViewer Margin="0,32,0,0" h:ScrollSynchronizer.ScrollGroup="TimelineScroll" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Hidden">
-                    <ListBox HorizontalAlignment="Left" x:Name="TimelineResources" Style="{StaticResource TimelineResourcesView}" h:DropFilesBehaviorExtension.IsEnabled="True"
-         ItemsSource="{Binding ResourcesInUse}" SelectedValue="{Binding SelectedResource}">
+                    <ListBox HorizontalAlignment="Left" x:Name="TimelineResources" Style="{StaticResource TimelineResourcesView}"
+         ItemsSource="{Binding ResourcesInUse}" SelectedValue="{Binding SelectedResource}" h:DropBehaviorExtension.IsEnabled="True">
                         <ListBox.Width>
                             <MultiBinding Converter="{StaticResource MultiValueProductConverter}">
                                 <Binding Path="ActualScale"/>
@@ -143,5 +149,7 @@ HorizontalAlignment="Right" Width="200" TickPlacement="TopLeft" Value="{Binding 
                 </ScrollViewer>
             </Grid>
         </ScrollViewer>
+        <TextBlock VerticalAlignment="Center" FontSize="22" Opacity="0.5" Style="{StaticResource ControlText}" Grid.Column="1" Grid.Row="1" Text="Перетащите ресурс в данное поле для начала работы"
+                   Visibility="{Binding StartTextVisibility}"/>
     </Grid>
 </UserControl>

@@ -5,22 +5,27 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace OpenCVVideoRedactor.Helpers
 {
-    class DropFilesBehaviorExtension
+    public class DropBehaviorExtension
     {
         public static readonly DependencyProperty IsEnabledProperty = DependencyProperty.RegisterAttached(
-        "IsEnabled", typeof(bool), typeof(DropFilesBehaviorExtension), new FrameworkPropertyMetadata(default(bool), OnPropChanged)
+        "IsEnabled", typeof(bool), typeof(DropBehaviorExtension), new FrameworkPropertyMetadata(default(bool), OnPropChanged)
         {
             BindsTwoWayByDefault = false,
         });
-
+        public static readonly DependencyProperty DataTypeProperty = DependencyProperty.RegisterAttached(
+        "DataType", typeof(Type), typeof(DropBehaviorExtension), new FrameworkPropertyMetadata(default(Type))
+        {
+            BindsTwoWayByDefault = false,
+        });
         private static void OnPropChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             if (!(d is FrameworkElement fe))
                 throw new InvalidOperationException();
-            if ((bool)e.NewValue)
+            if (e.NewValue is bool && (bool)e.NewValue)
             {
                 fe.AllowDrop = true;
                 fe.Drop += OnDrop;
@@ -42,15 +47,21 @@ namespace OpenCVVideoRedactor.Helpers
 
         private static void OnDrop(object sender, DragEventArgs e)
         {
-            var dataContext = ((FrameworkElement)sender).DataContext;
+            var fe = (FrameworkElement)sender;
+            var type = fe.GetValue(DataTypeProperty) as Type;
+            var dataContext = fe.DataContext;
             if (!(dataContext is IDropHandler filesDropped))
             {
                 if (dataContext != null)
                     Trace.TraceError($"Binding error, '{dataContext.GetType().Name}' doesn't implement '{nameof(IDropHandler)}'.");
                 return;
             }
-            //<TextBox ns:DropFilesBehaviorExtension.IsEnabled ="True" />
-            filesDropped.OnDataDropped(e.Data);
+            object? sourceData = null;
+            if (fe is ItemsControl) {
+                sourceData = ResourceHelper.GetDataFromItemsControl((ItemsControl)fe,e.GetPosition(fe));
+            }
+            if (type == null || e.Data.GetData(type) != null && sourceData != e.Data.GetData(type))
+                filesDropped.OnDataDropped(e.Data, sourceData);
         }
 
         public static void SetIsEnabled(DependencyObject element, bool value)
@@ -61,6 +72,15 @@ namespace OpenCVVideoRedactor.Helpers
         public static bool GetIsEnabled(DependencyObject element)
         {
             return (bool)element.GetValue(IsEnabledProperty);
+        }
+        public static void SetDataType(DependencyObject element, Type value)
+        {
+            element.SetValue(DataTypeProperty, value);
+        }
+
+        public static Type GetDataType(DependencyObject element)
+        {
+            return (Type)element.GetValue(DataTypeProperty);
         }
     }
 }

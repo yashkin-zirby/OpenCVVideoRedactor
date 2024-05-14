@@ -5,6 +5,8 @@ using OpenCVVideoRedactor.View;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -20,6 +22,7 @@ namespace OpenCVVideoRedactor.ViewModel
         public List<Project> Projects { get; set; }
         public int SelectedProjectIndex { get; set; }
         public bool ProjectIsSelected { get { return SelectedProjectIndex>=0 && SelectedProjectIndex < Projects.Count; } }
+        public Visibility LoaderVisibility { get; set; } = Visibility.Collapsed;
         public ProjectsListPageViewModel(DatabaseContext dbContext, PageInfo pageInfo, CurrentProjectInfo currentProjectInfo, CreateProjectModel createProjectModel)
         {
             _dbContext = dbContext;
@@ -35,13 +38,14 @@ namespace OpenCVVideoRedactor.ViewModel
             {
                 return new DelegateCommand(() =>
                 {
-                    if(MessageBox.Show("Вы уверены, что хотите удалить проект?\nДанную операцию нельзя отменить.", 
+                    if(System.Windows.Forms.MessageBox.Show("Вы уверены, что хотите удалить проект?\nДанную операцию нельзя отменить.", 
                         $"Удалить проект", MessageBoxButtons.OKCancel) == DialogResult.OK)
                     {
                         var project = Projects[SelectedProjectIndex];
                         _dbContext.Remove(project);
                         _dbContext.SaveChanges();
-                        Directory.Delete(project.DataFolder);
+                        _currentProjectInfo.ProjectInfo = null;
+                        DeleteDirectory(project.DataFolder);
                         Projects = _dbContext.Projects.ToList();
                     }
                 });
@@ -53,8 +57,15 @@ namespace OpenCVVideoRedactor.ViewModel
             {
                 return new DelegateCommand(() =>
                 {
-                    _currentProjectInfo.ProjectInfo = Projects[SelectedProjectIndex];
-                    _pageInfo.CurrentPage = new MainPage();
+                    if (SelectedProjectIndex >= 0 && SelectedProjectIndex < Projects.Count)
+                    {
+                        LoaderVisibility = Visibility.Visible;
+                        Task.Factory.StartNew(() =>
+                        {
+                            _currentProjectInfo.ProjectInfo = Projects[SelectedProjectIndex];
+                            App.Current.Dispatcher.Invoke(() => _pageInfo.CurrentPage = new MainPage());
+                        });
+                    }
                 });
             }
         }
@@ -71,6 +82,20 @@ namespace OpenCVVideoRedactor.ViewModel
                     _createProjectModel.VideoFps = 1;
                     _pageInfo.CurrentPage = new CreateProjectPage();
                 });
+            }
+        }
+        private static void DeleteDirectory(string directory)
+        {
+            while (Directory.Exists(directory))
+            {
+                try
+                {
+                    Directory.Delete(directory, true);
+                }
+                catch
+                {
+                    System.Threading.Thread.Sleep(100);
+                }
             }
         }
     }

@@ -9,6 +9,6 @@ namespace OpenCVVideoRedactor.Helpers
 {
     interface IDropHandler
     {
-        void OnDataDropped(IDataObject data);
+        void OnDataDropped(IDataObject data, object? dropSourceObject = null);
     }
 }

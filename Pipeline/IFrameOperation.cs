@@ -9,6 +9,8 @@ namespace OpenCVVideoRedactor.Pipeline
 {
     public interface IFrameOperation
     {
-        public Frame Apply(Frame frame);
+        public string Name { get; }
+        public Frame? Apply(Frame frame);
+        public Operation GetOperation();
     }
 }

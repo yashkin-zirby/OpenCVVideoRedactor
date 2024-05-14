@@ -139,6 +139,11 @@ namespace OpenCVVideoRedactor.ViewModel
                 return new ActionCommand((param) => {
                     if (_projectInfo.SelectedResource != null && _projectInfo.SelectedResourceInUse != null)
                     {
+                        if (Markers.Count == 0)
+                        {
+                            MessageBox.Show("Сначало поставте временные точки для разделения фрагментов");
+                            return;
+                        }
                         IsLoading = true;
                         Task.Factory.StartNew(() =>
                         {
@@ -151,7 +156,10 @@ namespace OpenCVVideoRedactor.ViewModel
                             else
                             {
                                 SplitResource((source, result, start, end) => {
-                                    FFMpeg.SubVideo(source, result, start, end);
+                                    FFMpegArguments.FromFileInput(source, verifyExists: true).OutputToFile(result, overwrite: true, delegate (FFMpegArgumentOptions options)
+                                    {
+                                        options.Seek(start).EndSeek(end);
+                                    }).ProcessSynchronously();
                                 });
                             }
                             IsLoading = false;
@@ -191,7 +199,6 @@ namespace OpenCVVideoRedactor.ViewModel
                 resource.Type = source.Type;
                 resource.ProjectId = source.ProjectId;
                 newResources.Add(resource);
-
                 subFileOperation(ResourcePath, Path.Combine(dir, resource.Name), prevMarker, marker);
                 prevMarker = marker;
                 markerNum++;
@@ -202,6 +209,7 @@ namespace OpenCVVideoRedactor.ViewModel
             {
                 _dbContext.Resources.AddRange(newResources);
                 _dbContext.SaveChanges();
+                foreach(var resource in newResources) ResourceHelper.CloneResourcePipeline(_dbContext, source, resource);
                 source.StartTime = null;
                 _dbContext.SaveChanges();
                 _projectInfo.NoticeResourceUpdated(_dbContext);
