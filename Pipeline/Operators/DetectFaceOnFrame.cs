@@ -14,8 +14,8 @@ namespace OpenCVVideoRedactor.Pipeline.Operators
 {
     class DetectFaceOnFrame : IFrameOperation
     {
-        private static string faceModel = @"FaceDetectionModels\face.caffemodel";
-        private static string configFile = @"FaceDetectionModels\deploy.prototxt";
+        private static string faceModel = @"MLModels\face.caffemodel";
+        private static string configFile = @"MLModels\deploy.prototxt";
         private static Net? faceNet = CvDnn.ReadNetFromCaffe(configFile, faceModel);
         public string Name { get { return nameof(DetectFaceOnFrame); } }
         private MathExpression _scaleFactor;

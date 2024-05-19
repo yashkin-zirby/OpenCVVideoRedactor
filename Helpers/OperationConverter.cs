@@ -47,7 +47,7 @@ namespace OpenCVVideoRedactor.Helpers
                 case nameof(ChangeHue): return "Изменить оттеннок";
                 case nameof(ChangeLightness): return "Изменить яркость";
             }
-            return "";
+            return name;
         }
         public object ConvertBack(object value, Type targetTypes, object parameter, CultureInfo culture)
         {
