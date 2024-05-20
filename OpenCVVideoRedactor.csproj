@@ -41,12 +41,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="ComplexMath">
-      <HintPath>C:\Users\100NOUT.BY\Desktop\OOP\ComplexMath\ComplexMath\bin\Debug\netcoreapp3.1\ComplexMath.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
-  <ItemGroup>
     <Compile Update="View\FinishProjectCreationPage.xaml.cs">
       <SubType>Code</SubType>
     </Compile>

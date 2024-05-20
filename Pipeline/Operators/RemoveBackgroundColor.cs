@@ -1,4 +1,4 @@
-﻿using ComplexMath.Parser;
+﻿using OpenCVVideoRedactor.Parser;
 using OpenCvSharp;
 using OpenCVVideoRedactor.Model.Database;
 using System;
@@ -59,10 +59,10 @@ namespace OpenCVVideoRedactor.Pipeline.Operators
                 _lightnessDifference.SetVarriable(variable.Key, variable.Value);
                 _maskBlur.SetVarriable(variable.Key, variable.Value);
             }
-            var hDif = _hueDifference.Calculate().Re;
-            var sDif = _saturationDifference.Calculate().Re;
-            var lDif = _lightnessDifference.Calculate().Re;
-            var maskBlur = _maskBlur.Calculate().Re;
+            var hDif = _hueDifference.Calculate();
+            var sDif = _saturationDifference.Calculate();
+            var lDif = _lightnessDifference.Calculate();
+            var maskBlur = _maskBlur.Calculate();
             Mat? alphaMask = null;
             if (frame.Image.Channels() == 4)
             {

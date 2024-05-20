@@ -1,4 +1,4 @@
-﻿using ComplexMath.Parser;
+﻿using OpenCVVideoRedactor.Parser;
 using OpenCvSharp;
 using OpenCVVideoRedactor.Model.Database;
 using System;
@@ -60,7 +60,7 @@ namespace OpenCVVideoRedactor.Pipeline.Operators
                 _scaleFactor.SetVarriable(variable.Key, variable.Value);
             }
             var image = frame.Image.Channels() == 4 ? frame.Image.CvtColor(ColorConversionCodes.BGRA2BGR) : frame.Image;
-            var scaleFactor = _scaleFactor.Calculate().Re;
+            var scaleFactor = _scaleFactor.Calculate();
             int frameHeight = image.Rows;
             int frameWidth = image.Cols;
             if (frameWidth / (double)frameHeight > 1.25)

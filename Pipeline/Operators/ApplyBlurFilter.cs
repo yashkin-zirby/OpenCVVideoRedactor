@@ -1,4 +1,4 @@
-﻿using ComplexMath.Parser;
+﻿using OpenCVVideoRedactor.Parser;
 using OpenCvSharp;
 using OpenCVVideoRedactor.Model.Database;
 using System;
@@ -29,7 +29,7 @@ namespace OpenCVVideoRedactor.Pipeline.Operators
             {
                 _blur.SetVarriable(variable.Key, variable.Value);
             }
-            var blur = 2*(int)Math.Max(Math.Floor(_blur.Calculate().Re),0)+1;
+            var blur = 2*(int)Math.Max(Math.Floor(_blur.Calculate()),0)+1;
             frame.Image = frame.Image.Blur(new Size(blur,blur));
             return frame;
         }

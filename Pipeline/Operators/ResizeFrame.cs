@@ -1,4 +1,4 @@
-﻿using ComplexMath.Parser;
+﻿using OpenCVVideoRedactor.Parser;
 using OpenCVVideoRedactor.Model.Database;
 using System;
 using System.Collections.Generic;
@@ -42,8 +42,8 @@ namespace OpenCVVideoRedactor.Pipeline.Operators
                 _widthExpression.SetVarriable(variable.Key, variable.Value);
                 _heightExpression.SetVarriable(variable.Key, variable.Value);
             }
-            var width = _widthExpression.Calculate().Re;
-            var height = _heightExpression.Calculate().Re;
+            var width = _widthExpression.Calculate();
+            var height = _heightExpression.Calculate();
             if (width < 1 && height < 1)
             {
                 return frame;

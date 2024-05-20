@@ -1,4 +1,4 @@
-﻿using ComplexMath.Parser;
+﻿using OpenCVVideoRedactor.Parser;
 using OpenCVVideoRedactor.Model.Database;
 using System;
 using System.Collections.Generic;
@@ -50,9 +50,9 @@ namespace OpenCVVideoRedactor.Pipeline.Operators
                 _leftExpression.SetVarriable(variable.Key, variable.Value);
                 _rightExpression.SetVarriable(variable.Key, variable.Value);
             }
-            if (IsConditionRight(_leftExpression.Calculate().Re, _rightExpression.Calculate().Re, _operator))
+            if (IsConditionRight(_leftExpression.Calculate(), _rightExpression.Calculate(), _operator))
             {
-                frame.Variables[_variable] = _expression.Calculate().Re;
+                frame.Variables[_variable] = _expression.Calculate();
             }
             return frame;
         }

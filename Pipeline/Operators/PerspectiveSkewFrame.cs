@@ -1,4 +1,4 @@
-﻿using ComplexMath.Parser;
+﻿using OpenCVVideoRedactor.Parser;
 using OpenCvSharp;
 using OpenCVVideoRedactor.Model.Database;
 using System;
@@ -69,14 +69,14 @@ namespace OpenCVVideoRedactor.Pipeline.Operators
                 _pointOffset4X.SetVarriable(variable.Key, variable.Value);
                 _pointOffset4Y.SetVarriable(variable.Key, variable.Value);
             }
-            var Offset1x = (float)_pointOffset1X.Calculate().Re;
-            var Offset1y = (float)_pointOffset1Y.Calculate().Re;
-            var Offset2x = (float)_pointOffset2X.Calculate().Re;
-            var Offset2y = (float)_pointOffset2Y.Calculate().Re;
-            var Offset3x = (float)_pointOffset3X.Calculate().Re;
-            var Offset3y = (float)_pointOffset3Y.Calculate().Re;
-            var Offset4x = (float)_pointOffset4X.Calculate().Re;
-            var Offset4y = (float)_pointOffset4Y.Calculate().Re;
+            var Offset1x = (float)_pointOffset1X.Calculate();
+            var Offset1y = (float)_pointOffset1Y.Calculate();
+            var Offset2x = (float)_pointOffset2X.Calculate();
+            var Offset2y = (float)_pointOffset2Y.Calculate();
+            var Offset3x = (float)_pointOffset3X.Calculate();
+            var Offset3y = (float)_pointOffset3Y.Calculate();
+            var Offset4x = (float)_pointOffset4X.Calculate();
+            var Offset4y = (float)_pointOffset4Y.Calculate();
             var width = frame.Image.Width-1;
             var height = frame.Image.Height-1;
             var transformPoints = new Point2f[] {

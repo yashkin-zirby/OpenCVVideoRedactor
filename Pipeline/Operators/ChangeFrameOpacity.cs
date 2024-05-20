@@ -1,4 +1,4 @@
-﻿using ComplexMath.Parser;
+﻿using OpenCVVideoRedactor.Parser;
 using OpenCvSharp;
 using OpenCVVideoRedactor.Model.Database;
 using System;
@@ -29,7 +29,7 @@ namespace OpenCVVideoRedactor.Pipeline.Operators
             {
                 _opacity.SetVarriable(variable.Key, variable.Value);
             }
-            var opacity = Math.Max(Math.Min(_opacity.Calculate().Re,1), 0);
+            var opacity = Math.Max(Math.Min(_opacity.Calculate(),1), 0);
             if (frame.Image.Channels() == 3) frame.Image = frame.Image.CvtColor(ColorConversionCodes.BGR2BGRA);
             Mat[] channels = frame.Image.Split();
             channels[3] = channels[3] * opacity;

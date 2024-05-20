@@ -1,4 +1,4 @@
-﻿using ComplexMath.Parser;
+﻿using OpenCVVideoRedactor.Parser;
 using OpenCvSharp;
 using OpenCVVideoRedactor.Model.Database;
 using System;
@@ -36,7 +36,7 @@ namespace OpenCVVideoRedactor.Pipeline.Operators
             {
                 _AngleExpression.SetVarriable(variable.Key, variable.Value);
             }
-            var angle = _AngleExpression.Calculate().Re;
+            var angle = _AngleExpression.Calculate();
             Mat result = new Mat();
             var width = frame.Image.Width;
             var height = frame.Image.Height;

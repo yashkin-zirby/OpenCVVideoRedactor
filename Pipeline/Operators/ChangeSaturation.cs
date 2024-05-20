@@ -1,4 +1,4 @@
-﻿using ComplexMath.Parser;
+﻿using OpenCVVideoRedactor.Parser;
 using OpenCvSharp;
 using OpenCVVideoRedactor.Model.Database;
 using System;
@@ -29,7 +29,7 @@ namespace OpenCVVideoRedactor.Pipeline.Operators
             {
                 _step.SetVarriable(variable.Key, variable.Value);
             }
-            var step = (int)_step.Calculate().Re;
+            var step = (int)_step.Calculate();
             Mat? alpha = null;
             if (frame.Image.Channels() == 4) alpha = frame.Image.ExtractChannel(3);
             var image = frame.Image.CvtColor(ColorConversionCodes.BGR2HSV_FULL);

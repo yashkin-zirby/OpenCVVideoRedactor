@@ -1,4 +1,4 @@
-﻿using ComplexMath.Parser;
+﻿using OpenCVVideoRedactor.Parser;
 using OpenCvSharp;
 using OpenCVVideoRedactor.Model.Database;
 using System;
@@ -56,10 +56,10 @@ namespace OpenCVVideoRedactor.Pipeline.Operators
                 _topExpression.SetVarriable(variable.Key, variable.Value);
                 _bottomExpression.SetVarriable(variable.Key, variable.Value);
             }
-            var left = _leftExpression.Calculate().Re;
-            var right = _rightExpression.Calculate().Re;
-            var top = _topExpression.Calculate().Re;
-            var bottom = _bottomExpression.Calculate().Re;
+            var left = _leftExpression.Calculate();
+            var right = _rightExpression.Calculate();
+            var top = _topExpression.Calculate();
+            var bottom = _bottomExpression.Calculate();
             var width = frame.Image.Width - right - left;
             var height = frame.Image.Height - bottom - top;
             var imgWidth = (int)(frame.Image.Width - Math.Max(0,right) - Math.Max(0, left));
