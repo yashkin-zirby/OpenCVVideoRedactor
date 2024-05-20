@@ -14,7 +14,7 @@ namespace OpenCVVideoRedactor.Pipeline.Operators
     class RotateFrame : IFrameOperation
     {
         public string Name { get { return nameof(RotateFrame); } }
-        private MathExpression _AngleExpression;
+        private IMathExpression _AngleExpression;
         private string _outputWidthVar = "";
         private string _outputHeightVar = "";
         public RotateFrame()

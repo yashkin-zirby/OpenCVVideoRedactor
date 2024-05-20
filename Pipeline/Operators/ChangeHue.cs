@@ -12,7 +12,7 @@ namespace OpenCVVideoRedactor.Pipeline.Operators
     class ChangeHue : IFrameOperation
     {
         public string Name { get { return nameof(ChangeHue); } }
-        private MathExpression _step;
+        private IMathExpression _step;
         public ChangeHue()
         {
             _step = new Value(0);

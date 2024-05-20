@@ -7,7 +7,7 @@ namespace OpenCVVideoRedactor
 {
     namespace Parser
     {
-        public class Value : MathExpression
+        public class Value : IMathExpression
         {
             private double _value;
             public Value(double value)
@@ -24,7 +24,7 @@ namespace OpenCVVideoRedactor
                 }
                 throw new Exception("Не корректная строка");
             }
-            public override double Calculate()
+            public double Calculate()
             {
                 return _value;
             }
@@ -43,22 +43,22 @@ namespace OpenCVVideoRedactor
                 return _value.ToString();
             }
 
-            public override bool SetVarriable(string name, double value)
+            public bool SetVarriable(string name, double value)
             {
                 return false;
             }
 
-            public override void SetFunction(string name, int argCount, MathDelegate func)
+            public void SetFunction(string name, int argCount, MathDelegate func)
             {
                 return;
             }
 
-            public override List<string> GetVariables()
+            public List<string> GetVariables()
             {
                 return new List<string>();
             }
 
-            public override List<(string name, int argsCount)> GetFunctions()
+            public List<(string name, int argsCount)> GetFunctions()
             {
                return new List<(string name, int argsCount)>();
             }

@@ -7,7 +7,7 @@ namespace OpenCVVideoRedactor
 {
     namespace Parser
     {
-        public class Variable : MathExpression
+        public class Variable : IMathExpression
         {
             private double? _value = null;
             private string _name;
@@ -42,7 +42,7 @@ namespace OpenCVVideoRedactor
                 _value = value;
             }
 
-            public override double Calculate()
+            public double Calculate()
             {
                 if (_value == null) throw new ArgumentNullException("Значение переменной "+_name+" не определено");
                 return _value.Value;
@@ -57,7 +57,7 @@ namespace OpenCVVideoRedactor
                 return _name;
             }
 
-            public override bool SetVarriable(string name, double value)
+            public bool SetVarriable(string name, double value)
             {
                 if(name == this._name && !isConst)
                 {
@@ -67,18 +67,18 @@ namespace OpenCVVideoRedactor
                 return false;
             }
 
-            public override void SetFunction(string name, int argCount, MathDelegate func)
+            public void SetFunction(string name, int argCount, MathDelegate func)
             {
                 return;
             }
 
-            public override List<string> GetVariables()
+            public List<string> GetVariables()
             {
                 if (isConst)return new List<string>();
                 return new List<string>() {_name};
             }
 
-            public override List<(string name, int argsCount)> GetFunctions()
+            public List<(string name, int argsCount)> GetFunctions()
             {
                 return new List<(string name, int argsCount)>();
             }

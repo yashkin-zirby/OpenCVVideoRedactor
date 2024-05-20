@@ -12,7 +12,7 @@ namespace OpenCVVideoRedactor.Pipeline.Operators
     class ChangeLightness : IFrameOperation
     {
         public string Name { get { return nameof(ChangeLightness); } }
-        private MathExpression _step;
+        private IMathExpression _step;
         public ChangeLightness()
         {
             _step = new Value(0);

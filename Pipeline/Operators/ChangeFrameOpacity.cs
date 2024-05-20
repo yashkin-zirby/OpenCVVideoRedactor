@@ -12,7 +12,7 @@ namespace OpenCVVideoRedactor.Pipeline.Operators
     class ChangeFrameOpacity : IFrameOperation
     {
         public string Name { get { return nameof(ChangeFrameOpacity); } }
-        private MathExpression _opacity;
+        private IMathExpression _opacity;
         public ChangeFrameOpacity()
         {
             _opacity = new Value(1);

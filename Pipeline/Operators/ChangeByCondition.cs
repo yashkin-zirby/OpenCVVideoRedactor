@@ -13,9 +13,9 @@ namespace OpenCVVideoRedactor.Pipeline.Operators
     {
         public string Name { get { return nameof(ChangeByCondition); } }
         private string _variable = "";
-        private MathExpression _expression;
-        private MathExpression _leftExpression;
-        private MathExpression _rightExpression;
+        private IMathExpression _expression;
+        private IMathExpression _leftExpression;
+        private IMathExpression _rightExpression;
         private string _operator = "=";
         public ChangeByCondition()
         {

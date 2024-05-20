@@ -13,8 +13,8 @@ namespace OpenCVVideoRedactor.Pipeline.Operators
         public string Name { get { return nameof(ResizeFrame); } }
         private string _outputWidthVar = "";
         private string _outputHeightVar = "";
-        private MathExpression _widthExpression;
-        private MathExpression _heightExpression;
+        private IMathExpression _widthExpression;
+        private IMathExpression _heightExpression;
         public ResizeFrame()
         {
             _widthExpression = new Value(0);

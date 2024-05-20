@@ -12,7 +12,7 @@ namespace OpenCVVideoRedactor.Pipeline.Operators
     class ChangeSaturation : IFrameOperation
     {
         public string Name { get { return nameof(ChangeSaturation); } }
-        private MathExpression _step;
+        private IMathExpression _step;
         public ChangeSaturation()
         {
             _step = new Value(0);

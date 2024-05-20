@@ -15,10 +15,10 @@ namespace OpenCVVideoRedactor.Pipeline.Operators
         public string Name { get { return nameof(CropFrame); } }
         private string _outputWidthVar = "";
         private string _outputHeightVar = "";
-        private MathExpression _leftExpression;
-        private MathExpression _rightExpression;
-        private MathExpression _topExpression;
-        private MathExpression _bottomExpression;
+        private IMathExpression _leftExpression;
+        private IMathExpression _rightExpression;
+        private IMathExpression _topExpression;
+        private IMathExpression _bottomExpression;
         public CropFrame()
         {
             _leftExpression = new Value(0);

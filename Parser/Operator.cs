@@ -8,7 +8,7 @@ namespace OpenCVVideoRedactor
     namespace Parser
     {
         public enum OperatorType { BinaryOperator, LeftOperator, RightOperator };
-        public class Operator : MathExpression
+        public class Operator : IMathExpression
         {
             private protected string operatorName;
             public string getName { get { return operatorName; } }
@@ -16,8 +16,8 @@ namespace OpenCVVideoRedactor
             private protected OperatorType type = OperatorType.BinaryOperator;
             private protected bool isSymbolOp;
             public OperatorType OperatorType { get { return type; } }
-            public MathExpression? left;
-            public MathExpression? right;
+            public IMathExpression? left;
+            public IMathExpression? right;
             private protected int _priority;
             public int Priority { get { return _priority; } }
             public Operator(string Name, MathDelegate Operation, int priority,OperatorType operatorType = OperatorType.BinaryOperator)
@@ -32,7 +32,7 @@ namespace OpenCVVideoRedactor
                 type = operatorType;
                 _priority = priority%100+(int)type * 100;
             }
-            public override double Calculate()
+            public virtual double Calculate()
             {
                 if(type == OperatorType.BinaryOperator)
                     return operation(new double[2] { left!.Calculate(), right!.Calculate() });
@@ -40,7 +40,7 @@ namespace OpenCVVideoRedactor
                     return operation(new double[1] { left!.Calculate()});
                 return operation(new double[1] {  right!.Calculate() });
             }
-            public virtual Operator Clone(MathExpression? leftExpr, MathExpression? rightExpr)
+            public virtual Operator Clone(IMathExpression? leftExpr, IMathExpression? rightExpr)
             {
                 Operator o = new Operator(operatorName, operation, _priority, type);
                 o.left = leftExpr;
@@ -125,7 +125,7 @@ namespace OpenCVVideoRedactor
                 return "";
             }
 
-            public override bool SetVarriable(string name, double value)
+            public virtual bool SetVarriable(string name, double value)
             {
                 bool lResult = false;
                 bool rResult = false;
@@ -134,7 +134,7 @@ namespace OpenCVVideoRedactor
                 return lResult || rResult;
             }
 
-            public override void SetFunction(string name, int argCount, MathDelegate func)
+            public virtual void SetFunction(string name, int argCount, MathDelegate func)
             {
                 left?.SetFunction(name, argCount, func);
                 right?.SetFunction(name, argCount, func);
@@ -144,7 +144,7 @@ namespace OpenCVVideoRedactor
                 return op.getName == getName && op.OperatorType == OperatorType;
             }
 
-            public override List<string> GetVariables()
+            public virtual List<string> GetVariables()
             {
                 List<string> variables = new List<string>();
                 if(left != null) variables.AddRange(left.GetVariables());
@@ -152,7 +152,7 @@ namespace OpenCVVideoRedactor
                 return variables;
             }
 
-            public override List<(string name, int argsCount)> GetFunctions()
+            public virtual List<(string name, int argsCount)> GetFunctions()
             {
                 List<(string name, int argsCount)> functions = new List<(string name, int argsCount)>();
                 if (left != null) functions.AddRange(left.GetFunctions());
@@ -163,86 +163,86 @@ namespace OpenCVVideoRedactor
         #region MathExpressionOperators
         public class MultiplicationOp : Operator
         {
-            public MultiplicationOp(MathExpression? L = null, MathExpression? R = null) : base("*", (double[] args) => { return args[0] * args[1]; }, 3)
+            public MultiplicationOp(IMathExpression? L = null, IMathExpression? R = null) : base("*", (double[] args) => { return args[0] * args[1]; }, 3)
             {
                 left = L;
                 right = R;
             }
-            public override Operator Clone(MathExpression? leftExpr, MathExpression? rightExpr)
+            public override Operator Clone(IMathExpression? leftExpr, IMathExpression? rightExpr)
             {
                 return new MultiplicationOp(leftExpr, rightExpr);
             }
         }
         public class DivisionOp : Operator
         {
-            public DivisionOp(MathExpression? L = null, MathExpression? R = null) : base("/", (double[] args) => { return args[0] / args[1]; }, 3)
+            public DivisionOp(IMathExpression? L = null, IMathExpression? R = null) : base("/", (double[] args) => { return args[0] / args[1]; }, 3)
             {
                 left = L;
                 right = R;
             }
-            public override Operator Clone(MathExpression? leftExpr, MathExpression? rightExpr)
+            public override Operator Clone(IMathExpression? leftExpr, IMathExpression? rightExpr)
             {
                 return new DivisionOp(leftExpr, rightExpr);
             }
         }
         public class AdditionOp : Operator
         {
-            public AdditionOp(MathExpression? L = null, MathExpression? R = null) : base("+", (double[] args) => { return args[0] + args[1]; }, 0)
+            public AdditionOp(IMathExpression? L = null, IMathExpression? R = null) : base("+", (double[] args) => { return args[0] + args[1]; }, 0)
             {
                 left = L;
                 right = R;
             }
-            public override Operator Clone(MathExpression? leftExpr, MathExpression? rightExpr)
+            public override Operator Clone(IMathExpression? leftExpr, IMathExpression? rightExpr)
             {
                 return new AdditionOp(leftExpr, rightExpr);
             }
         }
         public class SubtractionOp : Operator
         {
-            public SubtractionOp(MathExpression? L = null, MathExpression? R = null) : base("-", (double[] args) => { return args[0] - args[1]; }, 0)
+            public SubtractionOp(IMathExpression? L = null, IMathExpression? R = null) : base("-", (double[] args) => { return args[0] - args[1]; }, 0)
             {
                 left = L;
                 right = R;
             }
             
-            public override Operator Clone(MathExpression? leftExpr, MathExpression? rightExpr)
+            public override Operator Clone(IMathExpression? leftExpr, IMathExpression? rightExpr)
             {
                 return new SubtractionOp(leftExpr,rightExpr);
             }
         }
         public class ModOp : Operator
         {
-            public ModOp(MathExpression? L = null, MathExpression? R = null) : base("mod", (double[] args) => {
+            public ModOp(IMathExpression? L = null, IMathExpression? R = null) : base("mod", (double[] args) => {
                 return args[0] % args[1];
             }, 1)
             {
                 left = L;
                 right = R;
             }
-            public override Operator Clone(MathExpression? leftExpr, MathExpression? rightExpr)
+            public override Operator Clone(IMathExpression? leftExpr, IMathExpression? rightExpr)
             {
                 return new ModOp(leftExpr,rightExpr);
             }
         }
         public class PowerOp : Operator
         {
-            public PowerOp(MathExpression? L = null, MathExpression? R = null) : base("^", (double[] args) => { return Math.Pow(args[0], args[1]); }, 5)
+            public PowerOp(IMathExpression? L = null, IMathExpression? R = null) : base("^", (double[] args) => { return Math.Pow(args[0], args[1]); }, 5)
             {
                 left = L;
                 right = R;
             }
-            public override Operator Clone(MathExpression? leftExpr, MathExpression? rightExpr)
+            public override Operator Clone(IMathExpression? leftExpr, IMathExpression? rightExpr)
             {
                 return new PowerOp(leftExpr, rightExpr);
             }
         }
         public class SqrtOp : Operator
         {
-            public SqrtOp(MathExpression? R = null) : base("√", (double[] args) => { return Math.Sqrt(args[0]); }, 5, OperatorType.LeftOperator)
+            public SqrtOp(IMathExpression? R = null) : base("√", (double[] args) => { return Math.Sqrt(args[0]); }, 5, OperatorType.LeftOperator)
             {
                 right = R;
             }
-            public override Operator Clone(MathExpression? leftExpr, MathExpression? rightExpr)
+            public override Operator Clone(IMathExpression? leftExpr, IMathExpression? rightExpr)
             {
                 return new SqrtOp(rightExpr);
             }
@@ -254,22 +254,22 @@ namespace OpenCVVideoRedactor
         }
         public class PercentOp : Operator
         {
-            public PercentOp(MathExpression? L = null) : base("%", (double[] args) => { return args[0] / 100; }, 4, OperatorType.RightOperator)
+            public PercentOp(IMathExpression? L = null) : base("%", (double[] args) => { return args[0] / 100; }, 4, OperatorType.RightOperator)
             {
                 left = L;
             }
-            public override Operator Clone(MathExpression? leftExpr, MathExpression? rightExpr)
+            public override Operator Clone(IMathExpression? leftExpr, IMathExpression? rightExpr)
             {
                 return new PercentOp(leftExpr);
             }
         }
         public class NegativeOp : Operator
         {
-            public NegativeOp(MathExpression? R = null) : base("-", (double[] args) => { return -args[0]; }, 5, OperatorType.LeftOperator)
+            public NegativeOp(IMathExpression? R = null) : base("-", (double[] args) => { return -args[0]; }, 5, OperatorType.LeftOperator)
             {
                 right = R;
             }
-            public override Operator Clone(MathExpression? leftExpr, MathExpression? rightExpr)
+            public override Operator Clone(IMathExpression? leftExpr, IMathExpression? rightExpr)
             {
                 return new NegativeOp(rightExpr);
             }

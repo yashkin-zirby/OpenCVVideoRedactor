@@ -8,22 +8,22 @@ namespace OpenCVVideoRedactor
 {
     namespace Parser
     {
-        public class Function : MathExpression
+        public class Function : IMathExpression
         {
             private protected string _name;
             public string getName { get { return _name; } }
             public int ArgCount { get { return Arguments.Length; } }
-            public MathExpression[] Arguments { get { return _arguments; } }
+            public IMathExpression[] Arguments { get { return _arguments; } }
             private protected MathDelegate func;
-            private protected MathExpression[] _arguments { get; set; }
+            private protected IMathExpression[] _arguments { get; set; }
             public Function(string Name, int argCount, MathDelegate function)
             {
                 _name = Name;
-                _arguments = new MathExpression[argCount];
+                _arguments = new IMathExpression[argCount];
                 func = function;
             }
 
-            public void SetArguments(MathExpression[] args)
+            public void SetArguments(IMathExpression[] args)
             {
                 _arguments = args.Take(Arguments.Length).ToArray();
             }
@@ -31,12 +31,12 @@ namespace OpenCVVideoRedactor
             {
                 func = function;
             }
-            public override double Calculate()
+            public virtual double Calculate()
             {
                 if (func == null) throw new Exception("Функция "+_name+" не определена");
                 return func(_arguments.Select((n)=>n.Calculate()).ToArray());
             }
-            public double Calculate(double[] args)
+            public virtual double Calculate(double[] args)
             {
                 if (func == null) throw new Exception("Функция " + _name + " не определена");
                 return func(args.Take(_arguments.Length).ToArray());
@@ -112,7 +112,7 @@ namespace OpenCVVideoRedactor
                 }
                 throw new Exception("Not Valid Function");
             }
-            public Function Clone(MathExpression[] args)
+            public Function Clone(IMathExpression[] args)
             {
                 Function Func = new Function(this._name, this.ArgCount, this.func);
                 Func.SetArguments(args);
@@ -135,7 +135,7 @@ namespace OpenCVVideoRedactor
                 return result+")";
             }
 
-            public override bool SetVarriable(string name, double value)
+            public virtual bool SetVarriable(string name, double value)
             {
                 bool result = false;
                 foreach (var arg in _arguments)
@@ -145,7 +145,7 @@ namespace OpenCVVideoRedactor
                 return result;
             }
 
-            public override void SetFunction(string name, int argCount, MathDelegate func)
+            public virtual void SetFunction(string name, int argCount, MathDelegate func)
             {
                 if(_name == name && argCount == ArgCount)
                 {
@@ -156,12 +156,12 @@ namespace OpenCVVideoRedactor
                         arg.SetFunction(name, argCount, func);
                     }
             }
-            public override List<string> GetVariables()
+            public virtual List<string> GetVariables()
             {
                 return Arguments.SelectMany(n => n.GetVariables()).ToList();
             }
 
-            public override List<(string name, int argsCount)> GetFunctions()
+            public virtual List<(string name, int argsCount)> GetFunctions()
             {
                 var list = Arguments.SelectMany(n => n.GetFunctions()).ToList();
                 list.Add((_name, ArgCount));
@@ -171,7 +171,7 @@ namespace OpenCVVideoRedactor
         #region MathFunctions
         public class MaxFunction : Function
         {
-            public MaxFunction(MathExpression? argument1 = null, MathExpression? argument2 = null) : base("max", 2, (double[] args) => { return args[0] >= args[1]? args[0]: args[1]; })
+            public MaxFunction(IMathExpression? argument1 = null, IMathExpression? argument2 = null) : base("max", 2, (double[] args) => { return args[0] >= args[1]? args[0]: args[1]; })
             {
                 Arguments[0] = argument1 ?? new ErrorExpression();
                 Arguments[1] = argument2 ?? new ErrorExpression();
@@ -187,7 +187,7 @@ namespace OpenCVVideoRedactor
         }
         public class MinFunction : Function
         {
-            public MinFunction(MathExpression? argument1 = null, MathExpression? argument2 = null) : base("min", 2, (double[] args) => { return args[0] <= args[1] ? args[0] : args[1]; })
+            public MinFunction(IMathExpression? argument1 = null, IMathExpression? argument2 = null) : base("min", 2, (double[] args) => { return args[0] <= args[1] ? args[0] : args[1]; })
             {
                 Arguments[0] = argument1 ?? new ErrorExpression();
                 Arguments[1] = argument2 ?? new ErrorExpression();
@@ -203,7 +203,7 @@ namespace OpenCVVideoRedactor
         }
         public class RoundFunction : Function
         {
-            public RoundFunction(MathExpression? argument = null) : base("round", 1, (double[] args) => { return Math.Round(args[0]); })
+            public RoundFunction(IMathExpression? argument = null) : base("round", 1, (double[] args) => { return Math.Round(args[0]); })
             {
                 Arguments[0] = argument ?? new ErrorExpression();
             }
@@ -218,7 +218,7 @@ namespace OpenCVVideoRedactor
         }
         public class CeilFunction : Function
         {
-            public CeilFunction(MathExpression? argument = null) : base("ceil", 1, (double[] args) => { return Math.Ceiling(args[0]); })
+            public CeilFunction(IMathExpression? argument = null) : base("ceil", 1, (double[] args) => { return Math.Ceiling(args[0]); })
             {
                 Arguments[0] = argument ?? new ErrorExpression();
             }
@@ -233,7 +233,7 @@ namespace OpenCVVideoRedactor
         }
         public class FloorFunction : Function
         {
-            public FloorFunction(MathExpression? argument = null) : base("floor", 1, (double[] args) => { return Math.Floor(args[0]); })
+            public FloorFunction(IMathExpression? argument = null) : base("floor", 1, (double[] args) => { return Math.Floor(args[0]); })
             {
                 Arguments[0] = argument ?? new ErrorExpression();
             }
@@ -248,7 +248,7 @@ namespace OpenCVVideoRedactor
         }
         public class CtgFunction : Function
         {
-            public CtgFunction(MathExpression? argument = null) : base("ctg", 1, (double[] args) => { return 1/Math.Tan(args[0]); })
+            public CtgFunction(IMathExpression? argument = null) : base("ctg", 1, (double[] args) => { return 1/Math.Tan(args[0]); })
             {
                 Arguments[0] = argument ?? new ErrorExpression();
             }
@@ -263,7 +263,7 @@ namespace OpenCVVideoRedactor
         }
         public class TgFunction : Function
         {
-            public TgFunction(MathExpression? argument = null) : base("tg", 1, (double[] args) => { return Math.Tan(args[0]); })
+            public TgFunction(IMathExpression? argument = null) : base("tg", 1, (double[] args) => { return Math.Tan(args[0]); })
             {
                 Arguments[0] = argument ?? new ErrorExpression();
             }
@@ -278,7 +278,7 @@ namespace OpenCVVideoRedactor
         }
         public class ExpFunction : Function
         {
-            public ExpFunction(MathExpression? argument = null) : base("exp", 1, (double[] args) => { return Math.Exp(args[0]); })
+            public ExpFunction(IMathExpression? argument = null) : base("exp", 1, (double[] args) => { return Math.Exp(args[0]); })
             {
                 Arguments[0] = argument ?? new ErrorExpression();
             }
@@ -293,7 +293,7 @@ namespace OpenCVVideoRedactor
         }
         public class CosFunction : Function
         {
-            public CosFunction(MathExpression? argument = null) : base("cos", 1, (double[] args) => { return Math.Cos(args[0]); })
+            public CosFunction(IMathExpression? argument = null) : base("cos", 1, (double[] args) => { return Math.Cos(args[0]); })
             {
                 Arguments[0] = argument ?? new ErrorExpression();
             }
@@ -308,7 +308,7 @@ namespace OpenCVVideoRedactor
         }
         public class SinFunction : Function
         {
-            public SinFunction(MathExpression? argument = null) : base("sin", 1, (double[] args) => { return Math.Sin(args[0]); })
+            public SinFunction(IMathExpression? argument = null) : base("sin", 1, (double[] args) => { return Math.Sin(args[0]); })
             {
                 Arguments[0] = argument ?? new ErrorExpression();
             }
@@ -323,7 +323,7 @@ namespace OpenCVVideoRedactor
         }
         public class LogFunction : Function
         {
-            public LogFunction(MathExpression? argument = null, MathExpression? logBase = null) : base("log", 2, (double[] args) => { return Math.Log(args[0], args[1]); })
+            public LogFunction(IMathExpression? argument = null, IMathExpression? logBase = null) : base("log", 2, (double[] args) => { return Math.Log(args[0], args[1]); })
             {
                 Arguments[0] = argument ?? new ErrorExpression();
                 Arguments[1] = logBase ?? new ErrorExpression();
@@ -339,7 +339,7 @@ namespace OpenCVVideoRedactor
         }
         public class LgFunction : Function
         {
-            public LgFunction(MathExpression? argument = null) : base("lg", 1, (double[] args) => { return Math.Log10(args[0]); })
+            public LgFunction(IMathExpression? argument = null) : base("lg", 1, (double[] args) => { return Math.Log10(args[0]); })
             {
                 Arguments[0] = argument ?? new ErrorExpression();
             }
@@ -354,7 +354,7 @@ namespace OpenCVVideoRedactor
         }
         public class LnFunction : Function
         {
-            public LnFunction(MathExpression? argument = null) : base("ln", 1, (double[] args) => { return Math.Log(args[0]); })
+            public LnFunction(IMathExpression? argument = null) : base("ln", 1, (double[] args) => { return Math.Log(args[0]); })
             {
                 Arguments[0] = argument ?? new ErrorExpression();
             }

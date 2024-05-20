@@ -13,10 +13,10 @@ namespace OpenCVVideoRedactor.Pipeline.Operators
     class RemoveBackgroundColor : IFrameOperation
     {
         public string Name { get { return nameof(RemoveBackgroundColor); } }
-        private MathExpression _hueDifference;
-        private MathExpression _saturationDifference;
-        private MathExpression _lightnessDifference;
-        private MathExpression _maskBlur;
+        private IMathExpression _hueDifference;
+        private IMathExpression _saturationDifference;
+        private IMathExpression _lightnessDifference;
+        private IMathExpression _maskBlur;
         private Scalar _color;
         public RemoveBackgroundColor()
         {

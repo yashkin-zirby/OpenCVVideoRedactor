@@ -13,14 +13,14 @@ namespace OpenCVVideoRedactor.Pipeline.Operators
     class PerspectiveSkewFrame : IFrameOperation
     {
         public string Name { get { return nameof(PerspectiveSkewFrame); } }
-        private MathExpression _pointOffset1X;
-        private MathExpression _pointOffset1Y;
-        private MathExpression _pointOffset2X;
-        private MathExpression _pointOffset2Y;
-        private MathExpression _pointOffset3X;
-        private MathExpression _pointOffset3Y;
-        private MathExpression _pointOffset4X;
-        private MathExpression _pointOffset4Y;
+        private IMathExpression _pointOffset1X;
+        private IMathExpression _pointOffset1Y;
+        private IMathExpression _pointOffset2X;
+        private IMathExpression _pointOffset2Y;
+        private IMathExpression _pointOffset3X;
+        private IMathExpression _pointOffset3Y;
+        private IMathExpression _pointOffset4X;
+        private IMathExpression _pointOffset4Y;
         private string _outputWidthVar = "";
         private string _outputHeightVar = "";
         public PerspectiveSkewFrame()

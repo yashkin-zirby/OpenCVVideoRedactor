@@ -12,7 +12,7 @@ namespace OpenCVVideoRedactor.Pipeline.Operators
     {
         public string Name { get { return nameof(ChangeVariable); } }
         private string _variable = "";
-        private MathExpression _expression;
+        private IMathExpression _expression;
         public ChangeVariable()
         {
             _expression = new Value(0);

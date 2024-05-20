@@ -12,7 +12,7 @@ namespace OpenCVVideoRedactor.Pipeline.Operators
     class ApplyBlurFilter: IFrameOperation
     {
         public string Name { get { return nameof(ApplyBlurFilter); } }
-        private MathExpression _blur;
+        private IMathExpression _blur;
         public ApplyBlurFilter()
         {
             _blur = new Value(0);

@@ -51,11 +51,11 @@ namespace OpenCVVideoRedactor
                 functions.Add(func);
                 return true;
             }
-            public string[] GetVarriables(MathExpression expression)
+            public string[] GetVarriables(IMathExpression expression)
             {
                 return getVarriables(expression).Except(variables.Where(n => n.isConstant).Select(n => n.ToString())).ToArray();
             }
-            private string[] getVarriables(MathExpression expression)
+            private string[] getVarriables(IMathExpression expression)
             {
                 if (expression is Value) return new string[0];
                 if (expression is Variable) return new string[1] { $"{expression}"};
@@ -72,12 +72,12 @@ namespace OpenCVVideoRedactor
                 }
                 return new string[0];
             }
-            public MathExpression Parse(string expression)
+            public IMathExpression Parse(string expression)
             {
                 string str = DropSpecialArguments(expression);
                 (string newStr,List<Function> Functions) = FindFunctions(str);
                 str = newStr;
-                (string newStr2,List<MathExpression> Expressions) = FindExpressions(str);
+                (string newStr2,List<IMathExpression> Expressions) = FindExpressions(str);
                 str = newStr2;
                 Regex findFunc = new Regex(@"(func)");
                 Regex findExpr = new Regex(@"(expr)");
@@ -118,8 +118,8 @@ namespace OpenCVVideoRedactor
                                     rightStr = rightStr.Substring(r.Index + r.Value.Length);
                                     int countF = findFunc.Matches(leftStr).Count;
                                     int countE = findExpr.Matches(leftStr).Count;
-                                    MathExpression left;
-                                    MathExpression right;
+                                    IMathExpression left;
+                                    IMathExpression right;
                                     if (l.Value == "(func)") { left = Functions[countF]; Functions.Remove((Function)left); }
                                     else if (l.Value == "(expr)") { left = Expressions[countE]; Expressions.Remove(left); }
                                     else if (Value.isValue(l.Value)) { left = Value.ValueFromString(l.Value); }
@@ -141,7 +141,7 @@ namespace OpenCVVideoRedactor
                                     rightStr = rightStr.Substring(r.Index + r.Value.Length);
                                     int countF = findFunc.Matches(leftStr).Count;
                                     int countE = findExpr.Matches(leftStr).Count;
-                                    MathExpression right;
+                                    IMathExpression right;
                                     if (r.Value == "(func)") { right = Functions[countF]; Functions.Remove((Function)right); }
                                     else if (r.Value == "(expr)") { right = Expressions[countE]; Expressions.Remove(right); }
                                     else if (Value.isValue(r.Value)) { right = Value.ValueFromString(r.Value); }
@@ -158,7 +158,7 @@ namespace OpenCVVideoRedactor
                                     leftStr = leftStr.Substring(0, l.Index);
                                     int countF = findFunc.Matches(leftStr).Count;
                                     int countE = findExpr.Matches(leftStr).Count;
-                                    MathExpression left;
+                                    IMathExpression left;
                                     if (l.Value == "(func)") { left = Functions[countF]; Functions.Remove((Function)left); }
                                     else if (l.Value == "(expr)") { left = Expressions[countE]; Expressions.Remove(left); }
                                     else if (Value.isValue(l.Value)) { left = Value.ValueFromString(l.Value); }
@@ -191,7 +191,7 @@ namespace OpenCVVideoRedactor
                 }
                 return existingFunction.Clone(args.Select(n => Parse(n)).ToArray());
             }
-            private MathExpression ParseExpression(string expression)
+            private IMathExpression ParseExpression(string expression)
             {
                 if(expression[0]=='(' && expression.Last() == ')')
                 return Parse(expression.Substring(1,expression.Length-2));
@@ -243,12 +243,12 @@ namespace OpenCVVideoRedactor
                 resultString += val;
                 return (resultString, Result.ToList());
             }
-            private (string result, List<MathExpression> expressions) FindExpressions(string str)
+            private (string result, List<IMathExpression> expressions) FindExpressions(string str)
             {
                 Regex regex = new Regex(@"(?<![a-zA-Z0-9а-яА-Я)])\((?!func\)|expr\))");
                 string val = str;
                 string resultString = "";
-                var Result = new List<MathExpression>();
+                var Result = new List<IMathExpression>();
                 var match = regex.Match(val);
                 while (match.Success)
                 {

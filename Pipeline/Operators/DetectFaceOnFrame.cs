@@ -18,7 +18,7 @@ namespace OpenCVVideoRedactor.Pipeline.Operators
         private static string configFile = @"MLModels\deploy.prototxt";
         private static Net? faceNet = CvDnn.ReadNetFromCaffe(configFile, faceModel);
         public string Name { get { return nameof(DetectFaceOnFrame); } }
-        private MathExpression _scaleFactor;
+        private IMathExpression _scaleFactor;
         private Scalar _meanColor;
         private bool _findBiggest = false;
         private string _resultRectX = "";

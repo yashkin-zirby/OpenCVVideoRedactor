@@ -6,29 +6,29 @@ using System.Threading.Tasks;
 
 namespace OpenCVVideoRedactor.Parser
 {
-    class ErrorExpression : MathExpression
+    class ErrorExpression : IMathExpression
     {
-        public override double Calculate()
+        public double Calculate()
         {
             throw new NotImplementedException();
         }
 
-        public override List<(string name, int argsCount)> GetFunctions()
+        public List<(string name, int argsCount)> GetFunctions()
         {
             throw new NotImplementedException();
         }
 
-        public override List<string> GetVariables()
+        public List<string> GetVariables()
         {
             throw new NotImplementedException();
         }
 
-        public override void SetFunction(string name, int argCount, MathDelegate func)
+        public void SetFunction(string name, int argCount, MathDelegate func)
         {
             throw new NotImplementedException();
         }
 
-        public override bool SetVarriable(string name, double value)
+        public bool SetVarriable(string name, double value)
         {
             throw new NotImplementedException();
         }
