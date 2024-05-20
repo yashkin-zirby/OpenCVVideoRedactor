@@ -48,19 +48,9 @@ namespace OpenCVVideoRedactor
                 return false;
             }
 
-            public void SetFunction(string name, int argCount, MathDelegate func)
-            {
-                return;
-            }
-
             public List<string> GetVariables()
             {
                 return new List<string>();
-            }
-
-            public List<(string name, int argsCount)> GetFunctions()
-            {
-               return new List<(string name, int argsCount)>();
             }
         }
     }

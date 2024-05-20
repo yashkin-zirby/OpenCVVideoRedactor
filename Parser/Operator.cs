@@ -134,11 +134,6 @@ namespace OpenCVVideoRedactor
                 return lResult || rResult;
             }
 
-            public virtual void SetFunction(string name, int argCount, MathDelegate func)
-            {
-                left?.SetFunction(name, argCount, func);
-                right?.SetFunction(name, argCount, func);
-            }
             public virtual bool IsEqualOperator(Operator op)
             {
                 return op.getName == getName && op.OperatorType == OperatorType;
@@ -150,14 +145,6 @@ namespace OpenCVVideoRedactor
                 if(left != null) variables.AddRange(left.GetVariables());
                 if (right != null) variables.AddRange(right.GetVariables());
                 return variables;
-            }
-
-            public virtual List<(string name, int argsCount)> GetFunctions()
-            {
-                List<(string name, int argsCount)> functions = new List<(string name, int argsCount)>();
-                if (left != null) functions.AddRange(left.GetFunctions());
-                if (right != null) functions.AddRange(right.GetFunctions());
-                return functions;
             }
         }
         #region MathExpressionOperators

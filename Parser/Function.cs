@@ -145,27 +145,10 @@ namespace OpenCVVideoRedactor
                 return result;
             }
 
-            public virtual void SetFunction(string name, int argCount, MathDelegate func)
-            {
-                if(_name == name && argCount == ArgCount)
-                {
-                    this.func = func;
-                }
-                    foreach(var arg in _arguments)
-                    {
-                        arg.SetFunction(name, argCount, func);
-                    }
-            }
+            
             public virtual List<string> GetVariables()
             {
                 return Arguments.SelectMany(n => n.GetVariables()).ToList();
-            }
-
-            public virtual List<(string name, int argsCount)> GetFunctions()
-            {
-                var list = Arguments.SelectMany(n => n.GetFunctions()).ToList();
-                list.Add((_name, ArgCount));
-                return list;
             }
         }
         #region MathFunctions
@@ -175,10 +158,6 @@ namespace OpenCVVideoRedactor
             {
                 Arguments[0] = argument1 ?? new ErrorExpression();
                 Arguments[1] = argument2 ?? new ErrorExpression();
-            }
-            public override void SetFunction(string name, int argCount, MathDelegate func)
-            {
-                throw new Exception("Данная функция не может быть изменена");
             }
             public override Function Clone()
             {
@@ -192,10 +171,6 @@ namespace OpenCVVideoRedactor
                 Arguments[0] = argument1 ?? new ErrorExpression();
                 Arguments[1] = argument2 ?? new ErrorExpression();
             }
-            public override void SetFunction(string name, int argCount, MathDelegate func)
-            {
-                throw new Exception("Данная функция не может быть изменена");
-            }
             public override Function Clone()
             {
                 return new MinFunction(Arguments[0], Arguments[1]);
@@ -206,10 +181,6 @@ namespace OpenCVVideoRedactor
             public RoundFunction(IMathExpression? argument = null) : base("round", 1, (double[] args) => { return Math.Round(args[0]); })
             {
                 Arguments[0] = argument ?? new ErrorExpression();
-            }
-            public override void SetFunction(string name, int argCount, MathDelegate func)
-            {
-                throw new Exception("Данная функция не может быть изменена");
             }
             public override Function Clone()
             {
@@ -222,10 +193,6 @@ namespace OpenCVVideoRedactor
             {
                 Arguments[0] = argument ?? new ErrorExpression();
             }
-            public override void SetFunction(string name, int argCount, MathDelegate func)
-            {
-                throw new Exception("Данная функция не может быть изменена");
-            }
             public override Function Clone()
             {
                 return new CeilFunction(Arguments[0]);
@@ -236,10 +203,6 @@ namespace OpenCVVideoRedactor
             public FloorFunction(IMathExpression? argument = null) : base("floor", 1, (double[] args) => { return Math.Floor(args[0]); })
             {
                 Arguments[0] = argument ?? new ErrorExpression();
-            }
-            public override void SetFunction(string name, int argCount, MathDelegate func)
-            {
-                throw new Exception("Данная функция не может быть изменена");
             }
             public override Function Clone()
             {
@@ -256,10 +219,6 @@ namespace OpenCVVideoRedactor
             {
                 return new CtgFunction(Arguments[0]);
             }
-            public override void SetFunction(string name, int argCount, MathDelegate func)
-            {
-                throw new Exception("Данная функция не может быть изменена");
-            }
         }
         public class TgFunction : Function
         {
@@ -270,10 +229,6 @@ namespace OpenCVVideoRedactor
             public override Function Clone()
             {
                 return new TgFunction(Arguments[0]);
-            }
-            public override void SetFunction(string name, int argCount, MathDelegate func)
-            {
-                throw new Exception("Данная функция не может быть изменена");
             }
         }
         public class ExpFunction : Function
@@ -286,10 +241,6 @@ namespace OpenCVVideoRedactor
             {
                 return new ExpFunction(Arguments[0]);
             }
-            public override void SetFunction(string name, int argCount, MathDelegate func)
-            {
-                throw new Exception("Данная функция не может быть изменена");
-            }
         }
         public class CosFunction : Function
         {
@@ -301,10 +252,6 @@ namespace OpenCVVideoRedactor
             {
                 return new CosFunction(Arguments[0]);
             }
-            public override void SetFunction(string name, int argCount, MathDelegate func)
-            {
-                throw new Exception("Данная функция не может быть изменена");
-            }
         }
         public class SinFunction : Function
         {
@@ -315,10 +262,6 @@ namespace OpenCVVideoRedactor
             public override Function Clone()
             {
                 return new SinFunction(Arguments[0]);
-            }
-            public override void SetFunction(string name, int argCount, MathDelegate func)
-            {
-                throw new Exception("Данная функция не может быть изменена");
             }
         }
         public class LogFunction : Function
@@ -332,10 +275,6 @@ namespace OpenCVVideoRedactor
             {
                 return new LogFunction(Arguments[0], Arguments[1]);
             }
-            public override void SetFunction(string name, int argCount, MathDelegate func)
-            {
-                throw new Exception("Данная функция не может быть изменена");
-            }
         }
         public class LgFunction : Function
         {
@@ -347,10 +286,6 @@ namespace OpenCVVideoRedactor
             {
                 return new LgFunction(Arguments[0]);
             }
-            public override void SetFunction(string name, int argCount, MathDelegate func)
-            {
-                throw new Exception("Данная функция не может быть изменена");
-            }
         }
         public class LnFunction : Function
         {
@@ -361,10 +296,6 @@ namespace OpenCVVideoRedactor
             public override Function Clone()
             {
                 return new LnFunction(Arguments[0]);
-            }
-            public override void SetFunction(string name, int argCount, MathDelegate func)
-            {
-                throw new Exception("Данная функция не может быть изменена");
             }
         }
         #endregion

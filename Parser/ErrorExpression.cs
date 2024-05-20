@@ -13,17 +13,7 @@ namespace OpenCVVideoRedactor.Parser
             throw new NotImplementedException();
         }
 
-        public List<(string name, int argsCount)> GetFunctions()
-        {
-            throw new NotImplementedException();
-        }
-
         public List<string> GetVariables()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void SetFunction(string name, int argCount, MathDelegate func)
         {
             throw new NotImplementedException();
         }

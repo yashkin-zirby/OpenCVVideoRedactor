@@ -67,20 +67,10 @@ namespace OpenCVVideoRedactor
                 return false;
             }
 
-            public void SetFunction(string name, int argCount, MathDelegate func)
-            {
-                return;
-            }
-
             public List<string> GetVariables()
             {
                 if (isConst)return new List<string>();
                 return new List<string>() {_name};
-            }
-
-            public List<(string name, int argsCount)> GetFunctions()
-            {
-                return new List<(string name, int argsCount)>();
             }
         }
     }
