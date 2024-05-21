@@ -49,28 +49,20 @@ namespace OpenCVVideoRedactor
             }
             public virtual Match Find(string str)
             {
-                Regex findPoss;
                 if (isSymbolOp)
                 {
                     string name = operatorName == "^" || operatorName == @"\" ? @"\" + operatorName:operatorName;
-                    if (type == OperatorType.BinaryOperator)
+                    switch (type)
                     {
-                        findPoss = new Regex(@"(?<=([a-zA-Zа-яА-Я0-9)]+)(\s?))([" + name + @"])(?=(\s?)([0-9a-zA-Zа-яА-Я(]))");
-                        return findPoss.Match(str);
-                    }
-                    if (type == OperatorType.LeftOperator)
-                    {
-                        findPoss = new Regex(@"(?<!([0-9a-zA-Zа-яА-Я().,\s]+(\s?)|\s[a-zA-Z]+\s))([" + name + @"])(?=(\s?)([0-9a-zA-Zа-яА-Я(]+))");
-                        return findPoss.Match(str);
-                    }
-                    if (type == OperatorType.RightOperator)
-                    {
-                        findPoss = new Regex(@"(?<=([a-zA-Zа-яА-Я0-9)]+)(\s?))(["+name+@"])(?=([^0-9a-zA-Zа-яА-Я().,\s]*(\s?)|\s[a-zA-Z]+\s))");
-                        return findPoss.Match(str);
+                        case OperatorType.BinaryOperator:
+                            return new Regex(@"(?<=([a-zA-Zа-яА-Я0-9)]+)(\s?))([" + name + @"])(?=(\s?)([0-9a-zA-Zа-яА-Я(]))").Match(str);
+                        case OperatorType.LeftOperator:
+                            return new Regex(@"(?<!([0-9a-zA-Zа-яА-Я().,\s]+(\s?)|\s[a-zA-Z]+\s))([" + name + @"])(?=(\s?)([0-9a-zA-Zа-яА-Я(]+))").Match(str);
+                        case OperatorType.RightOperator:
+                            return new Regex(@"(?<=([a-zA-Zа-яА-Я0-9)]+)(\s?))([" + name + @"])(?=([^0-9a-zA-Zа-яА-Я().,\s]*(\s?)|\s[a-zA-Z]+\s))").Match(str);
                     }
                 }
-                findPoss = new Regex(@"(?<=[a-zA-Zа-яА-Я0-9)]+)(\s"+operatorName+@"\s)(?=[0-9a-zA-Zа-яА-Я(]+)");
-                return findPoss.Match(str);
+                return new Regex(@"(?<=[a-zA-Zа-яА-Я0-9)]+)(\s"+operatorName+@"\s)(?=[0-9a-zA-Zа-яА-Я(]+)").Match(str);
             }
             public override string ToString()
             {

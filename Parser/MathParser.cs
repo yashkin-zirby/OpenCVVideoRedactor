@@ -81,8 +81,8 @@ namespace OpenCVVideoRedactor
                 str = newStr2;
                 Regex findFunc = new Regex(@"(func)");
                 Regex findExpr = new Regex(@"(expr)");
-                Regex findValR = new Regex(@"\(func\)|\(expr\)|(?<![a-zA-Z0-9а-яА-Я)])(([a-zA-Zа-яА-Я]+[0-9]*)|(((\d+(\.\d+)?)(i?))|i))(?![a-zA-Z0-9а-яА-Я(])");
-                Regex findValL = new Regex(@"\(func\)|\(expr\)|(?<![a-zA-Z0-9а-яА-Я)])(([a-zA-Zа-яА-Я]+[0-9]*)|(((\d+(\.\d+)?)(i?))|i))(?![a-zA-Z0-9а-яА-Я(])", RegexOptions.RightToLeft);
+                Regex findValR = new Regex(@"\(func\)|\(expr\)|(?<![a-zA-Z0-9а-яА-Я)])(([a-zA-Zа-яА-Я]+[0-9]*)|(\d+(\.\d+)?))(?![a-zA-Z0-9а-яА-Я(])");
+                Regex findValL = new Regex(@"\(func\)|\(expr\)|(?<![a-zA-Z0-9а-яА-Я)])(([a-zA-Zа-яА-Я]+[0-9]*)|(\d+(\.\d+)?))(?![a-zA-Z0-9а-яА-Я(])", RegexOptions.RightToLeft);
                 var operatorsGroups = operators.OrderBy((n) => -n.Priority).GroupBy(n => n.Priority).ToList();
                 for (int i = 0; i < operatorsGroups.Count; i++)
                 {
@@ -178,7 +178,7 @@ namespace OpenCVVideoRedactor
                     Variable? variable = variables.FirstOrDefault(n => n.ToString() == str);
                     return variable ?? new Variable(str);
                 }
-                return new ErrorExpression();
+                return new NotDefinedExpression();
             }
             private Function ParseFunction(string func)
             {

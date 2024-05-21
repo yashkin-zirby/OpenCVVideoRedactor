@@ -156,8 +156,8 @@ namespace OpenCVVideoRedactor
         {
             public MaxFunction(IMathExpression? argument1 = null, IMathExpression? argument2 = null) : base("max", 2, (double[] args) => { return args[0] >= args[1]? args[0]: args[1]; })
             {
-                Arguments[0] = argument1 ?? new ErrorExpression();
-                Arguments[1] = argument2 ?? new ErrorExpression();
+                Arguments[0] = argument1 ?? new NotDefinedExpression();
+                Arguments[1] = argument2 ?? new NotDefinedExpression();
             }
             public override Function Clone()
             {
@@ -168,8 +168,8 @@ namespace OpenCVVideoRedactor
         {
             public MinFunction(IMathExpression? argument1 = null, IMathExpression? argument2 = null) : base("min", 2, (double[] args) => { return args[0] <= args[1] ? args[0] : args[1]; })
             {
-                Arguments[0] = argument1 ?? new ErrorExpression();
-                Arguments[1] = argument2 ?? new ErrorExpression();
+                Arguments[0] = argument1 ?? new NotDefinedExpression();
+                Arguments[1] = argument2 ?? new NotDefinedExpression();
             }
             public override Function Clone()
             {
@@ -180,7 +180,7 @@ namespace OpenCVVideoRedactor
         {
             public RoundFunction(IMathExpression? argument = null) : base("round", 1, (double[] args) => { return Math.Round(args[0]); })
             {
-                Arguments[0] = argument ?? new ErrorExpression();
+                Arguments[0] = argument ?? new NotDefinedExpression();
             }
             public override Function Clone()
             {
@@ -191,7 +191,7 @@ namespace OpenCVVideoRedactor
         {
             public CeilFunction(IMathExpression? argument = null) : base("ceil", 1, (double[] args) => { return Math.Ceiling(args[0]); })
             {
-                Arguments[0] = argument ?? new ErrorExpression();
+                Arguments[0] = argument ?? new NotDefinedExpression();
             }
             public override Function Clone()
             {
@@ -202,7 +202,7 @@ namespace OpenCVVideoRedactor
         {
             public FloorFunction(IMathExpression? argument = null) : base("floor", 1, (double[] args) => { return Math.Floor(args[0]); })
             {
-                Arguments[0] = argument ?? new ErrorExpression();
+                Arguments[0] = argument ?? new NotDefinedExpression();
             }
             public override Function Clone()
             {
@@ -213,7 +213,7 @@ namespace OpenCVVideoRedactor
         {
             public CtgFunction(IMathExpression? argument = null) : base("ctg", 1, (double[] args) => { return 1/Math.Tan(args[0]); })
             {
-                Arguments[0] = argument ?? new ErrorExpression();
+                Arguments[0] = argument ?? new NotDefinedExpression();
             }
             public override Function Clone()
             {
@@ -224,7 +224,7 @@ namespace OpenCVVideoRedactor
         {
             public TgFunction(IMathExpression? argument = null) : base("tg", 1, (double[] args) => { return Math.Tan(args[0]); })
             {
-                Arguments[0] = argument ?? new ErrorExpression();
+                Arguments[0] = argument ?? new NotDefinedExpression();
             }
             public override Function Clone()
             {
@@ -235,7 +235,7 @@ namespace OpenCVVideoRedactor
         {
             public ExpFunction(IMathExpression? argument = null) : base("exp", 1, (double[] args) => { return Math.Exp(args[0]); })
             {
-                Arguments[0] = argument ?? new ErrorExpression();
+                Arguments[0] = argument ?? new NotDefinedExpression();
             }
             public override Function Clone()
             {
@@ -246,7 +246,7 @@ namespace OpenCVVideoRedactor
         {
             public CosFunction(IMathExpression? argument = null) : base("cos", 1, (double[] args) => { return Math.Cos(args[0]); })
             {
-                Arguments[0] = argument ?? new ErrorExpression();
+                Arguments[0] = argument ?? new NotDefinedExpression();
             }
             public override Function Clone()
             {
@@ -257,7 +257,7 @@ namespace OpenCVVideoRedactor
         {
             public SinFunction(IMathExpression? argument = null) : base("sin", 1, (double[] args) => { return Math.Sin(args[0]); })
             {
-                Arguments[0] = argument ?? new ErrorExpression();
+                Arguments[0] = argument ?? new NotDefinedExpression();
             }
             public override Function Clone()
             {
@@ -268,8 +268,8 @@ namespace OpenCVVideoRedactor
         {
             public LogFunction(IMathExpression? argument = null, IMathExpression? logBase = null) : base("log", 2, (double[] args) => { return Math.Log(args[0], args[1]); })
             {
-                Arguments[0] = argument ?? new ErrorExpression();
-                Arguments[1] = logBase ?? new ErrorExpression();
+                Arguments[0] = argument ?? new NotDefinedExpression();
+                Arguments[1] = logBase ?? new NotDefinedExpression();
             }
             public override Function Clone()
             {
@@ -280,7 +280,7 @@ namespace OpenCVVideoRedactor
         {
             public LgFunction(IMathExpression? argument = null) : base("lg", 1, (double[] args) => { return Math.Log10(args[0]); })
             {
-                Arguments[0] = argument ?? new ErrorExpression();
+                Arguments[0] = argument ?? new NotDefinedExpression();
             }
             public override Function Clone()
             {
@@ -291,7 +291,7 @@ namespace OpenCVVideoRedactor
         {
             public LnFunction(IMathExpression? argument = null) : base("ln", 1, (double[] args) => { return Math.Log(args[0]); })
             {
-                Arguments[0] = argument ?? new ErrorExpression();
+                Arguments[0] = argument ?? new NotDefinedExpression();
             }
             public override Function Clone()
             {

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace OpenCVVideoRedactor.Parser
 {
-    class ErrorExpression : IMathExpression
+    class NotDefinedExpression : IMathExpression
     {
         public double Calculate()
         {
