@@ -19,7 +19,7 @@ namespace OpenCVVideoRedactor.PopUpWindows
             public static bool NoValidate(string text) => true;
         }
 
-        public static string ShowDialog(string title, string text, string defaultValue="", Predicate<string>? validate = null)
+        public static string ShowDialog(string title, string text, string defaultValue="", Predicate<string>? validate = null, string invalidMessage="Некорректный значение", Func<string,string>? onInput = null)
         {
             string result = "";
             App.Current.Dispatcher.Invoke(() => {
@@ -68,6 +68,8 @@ namespace OpenCVVideoRedactor.PopUpWindows
                             {
                                 if (validate != null && validate(input.Text))
                                     Box.Close();
+                                else
+                                    MessageBox.Show(invalidMessage);
                             }
                             break;
                         case Key.Escape:
@@ -75,6 +77,9 @@ namespace OpenCVVideoRedactor.PopUpWindows
                                 input.Text = "";
                                 Box.Close();
                             }
+                            break;
+                        default:
+                            if (onInput != null) input.Text = onInput(input.Text);
                             break;
                     }
                 };
@@ -86,6 +91,8 @@ namespace OpenCVVideoRedactor.PopUpWindows
                 okButton.Click += (e, args) => {
                     if (validate != null && validate(input.Text))
                         Box.Close();
+                    else
+                        MessageBox.Show(invalidMessage);
                 };
                 okButton.Margin = new Thickness(20);
                 okButton.Content = "Ok";

@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OpenCVVideoRedactor.Pipeline.Operators
+namespace OpenCVVideoRedactor.Pipeline.Operations
 {
     class ChangeFrameOpacity : IFrameOperation
     {

@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace OpenCVVideoRedactor.Pipeline.Operators
+namespace OpenCVVideoRedactor.Pipeline.Operations
 {
     class RemoveBackgroundColor : IFrameOperation
     {

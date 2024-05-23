@@ -49,9 +49,9 @@
                             <TextBlock Foreground="#F0F0F0">Показать/скрыть панель свойств</TextBlock>
                         </CheckBox>
                     </MenuItem>
-                    <MenuItem Header="Справка" Style="{StaticResource MenuItemTemplate}" Height="25">
-                        <MenuItem Header="О программе" Background="#494949" Foreground="#EEE" Height="25" Command="{Binding AboutWindowShow}"/>
-                    </MenuItem>
+                    <MenuItem Header="Справка" Style="{StaticResource MenuItemTemplate}" Height="25" Command="{Binding AboutWindowShow}"/>
+                    <MenuItem Header="Активировать лицензию" Style="{StaticResource MenuItemTemplate}" Height="25"
+                              Visibility="{Binding IsVisibleActivateButton}" Command="{Binding ActivateProduct}"/>
                 </Menu>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                     <Button Style="{StaticResource ToolbarButton}" Command="cmd:ApplicationHideCommand.Instance">

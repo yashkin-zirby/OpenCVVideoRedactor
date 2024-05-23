@@ -7,7 +7,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace OpenCVVideoRedactor.Pipeline.Operators
+namespace OpenCVVideoRedactor.Pipeline.Operations
 {
     class ChangeByCondition : IFrameOperation
     {

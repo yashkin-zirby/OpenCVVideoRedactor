@@ -7,21 +7,21 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OpenCVVideoRedactor.Pipeline.Operators
+namespace OpenCVVideoRedactor.Pipeline.Operations
 {
-    class ChangeHue : IFrameOperation
+    class ChangeLightness : IFrameOperation
     {
-        public string Name { get { return nameof(ChangeHue); } }
+        public string Name { get { return nameof(ChangeLightness); } }
         private IMathExpression _step;
-        public ChangeHue()
+        public ChangeLightness()
         {
             _step = new Value(0);
         }
-        public ChangeHue(Operation operation)
+        public ChangeLightness(Operation operation)
         {
             var mathParser = new MathParser();
             _step = mathParser.Parse(operation.Parameters
-                .FirstOrDefault(n => n.Name == "Оттенок" && n.Type == (long)ParameterType.EXPRESSION)?.Value ?? "0");
+                .FirstOrDefault(n => n.Name == "Яркость" && n.Type == (long)ParameterType.EXPRESSION)?.Value ?? "0");
         }
         public Frame? Apply(Frame frame)
         {
@@ -34,7 +34,7 @@ namespace OpenCVVideoRedactor.Pipeline.Operators
             if (frame.Image.Channels() == 4) alpha = frame.Image.ExtractChannel(3);
             var image = frame.Image.CvtColor(ColorConversionCodes.BGR2HLS_FULL);
             Mat[] hls = Cv2.Split(image);
-            hls[0] += step;
+            hls[1] += step;
             Cv2.Merge(hls, image);
             frame.Image = image.CvtColor(ColorConversionCodes.HLS2BGR_FULL);
             if (alpha != null)
@@ -53,7 +53,7 @@ namespace OpenCVVideoRedactor.Pipeline.Operators
             {
                 Name = Name,
                 Parameters = new Parameter[] {
-                    new Parameter(){Name="Оттенок",Type=(long)ParameterType.EXPRESSION,Value=$"{_step}"}
+                    new Parameter(){Name="Яркость",Type=(long)ParameterType.EXPRESSION,Value=$"{_step}"}
                 }
             };
         }

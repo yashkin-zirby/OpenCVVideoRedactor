@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using System.Windows.Data;
 using System.Windows;
 using OpenCVVideoRedactor.Pipeline;
-using OpenCVVideoRedactor.Pipeline.Operators;
+using OpenCVVideoRedactor.Pipeline.Operations;
 
 namespace OpenCVVideoRedactor.Helpers
 {

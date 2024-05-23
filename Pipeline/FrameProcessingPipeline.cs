@@ -1,4 +1,5 @@
-﻿using OpenCVVideoRedactor.Model.Database;
+﻿using OpenCVVideoRedactor.Helpers;
+using OpenCVVideoRedactor.Model.Database;
 using OpenCVVideoRedactor.Pipeline;
 using System;
 using System.Collections.Generic;
@@ -6,13 +7,14 @@ using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using System.Threading.Tasks;
+using OpenCVVideoRedactor.Pipeline.Operations;
 using System.Windows;
 
 namespace OpenCVVideoRedactor.Pipepline
 {
     public class FrameProcessingPipeline
     {
+        private static string[] _premiumOperations = new string[] { nameof(DetectFaceOnFrame), nameof(RemoveBackgroundColor) };
         private IEnumerable<IFrameOperation?> _operations;
         public FrameProcessingPipeline(Resource resource) {
             var types = GetOperationsTypes();
@@ -39,7 +41,8 @@ namespace OpenCVVideoRedactor.Pipepline
             var type = typeof(IFrameOperation);
             return AppDomain.CurrentDomain.GetAssemblies()
                 .SelectMany(s => s.GetTypes())
-                .Where(p => type.IsAssignableFrom(p) && p.IsClass && !p.IsAbstract);
+                .Where(p => type.IsAssignableFrom(p) && p.IsClass && !p.IsAbstract &&
+                        (KeyActivationHelper.IsActivated || !_premiumOperations.Contains(p.Name)));
         }
         public Frame? Apply(Frame frame)
         {

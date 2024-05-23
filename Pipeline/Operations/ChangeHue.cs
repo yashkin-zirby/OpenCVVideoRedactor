@@ -7,21 +7,21 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OpenCVVideoRedactor.Pipeline.Operators
+namespace OpenCVVideoRedactor.Pipeline.Operations
 {
-    class ChangeSaturation : IFrameOperation
+    class ChangeHue : IFrameOperation
     {
-        public string Name { get { return nameof(ChangeSaturation); } }
+        public string Name { get { return nameof(ChangeHue); } }
         private IMathExpression _step;
-        public ChangeSaturation()
+        public ChangeHue()
         {
             _step = new Value(0);
         }
-        public ChangeSaturation(Operation operation)
+        public ChangeHue(Operation operation)
         {
             var mathParser = new MathParser();
             _step = mathParser.Parse(operation.Parameters
-                .FirstOrDefault(n => n.Name == "Насыщенность" && n.Type == (long)ParameterType.EXPRESSION)?.Value ?? "0");
+                .FirstOrDefault(n => n.Name == "Оттенок" && n.Type == (long)ParameterType.EXPRESSION)?.Value ?? "0");
         }
         public Frame? Apply(Frame frame)
         {
@@ -32,12 +32,12 @@ namespace OpenCVVideoRedactor.Pipeline.Operators
             var step = (int)_step.Calculate();
             Mat? alpha = null;
             if (frame.Image.Channels() == 4) alpha = frame.Image.ExtractChannel(3);
-            var image = frame.Image.CvtColor(ColorConversionCodes.BGR2HSV_FULL);
-            Mat[] hsv = Cv2.Split(image);
-            hsv[1] += step;
-            Cv2.Merge(hsv, image);
-            frame.Image = image.CvtColor(ColorConversionCodes.HSV2BGR_FULL);
-            if(alpha != null)
+            var image = frame.Image.CvtColor(ColorConversionCodes.BGR2HLS_FULL);
+            Mat[] hls = Cv2.Split(image);
+            hls[0] += step;
+            Cv2.Merge(hls, image);
+            frame.Image = image.CvtColor(ColorConversionCodes.HLS2BGR_FULL);
+            if (alpha != null)
             {
                 frame.Image = frame.Image.CvtColor(ColorConversionCodes.BGR2BGRA);
                 Mat[] channels = frame.Image.Split();
@@ -53,7 +53,7 @@ namespace OpenCVVideoRedactor.Pipeline.Operators
             {
                 Name = Name,
                 Parameters = new Parameter[] {
-                    new Parameter(){Name="Насыщенность",Type=(long)ParameterType.EXPRESSION,Value=$"{_step}"}
+                    new Parameter(){Name="Оттенок",Type=(long)ParameterType.EXPRESSION,Value=$"{_step}"}
                 }
             };
         }

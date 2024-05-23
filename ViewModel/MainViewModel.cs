@@ -1,5 +1,6 @@
 ﻿using DevExpress.Mvvm;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using OpenCVVideoRedactor.Helpers;
 using OpenCVVideoRedactor.Model;
 using OpenCVVideoRedactor.View;
 using System;
@@ -19,9 +20,12 @@ namespace OpenCVVideoRedactor.ViewModel
         public Visibility IsVisibleSaveButton { get { return _projectInfo.ProjectInfo != null ? Visibility.Visible : Visibility.Collapsed; } }
         public Visibility IsVisibleImportButton { get { return _pageInfo.CurrentPage is MainPage ? Visibility.Visible : Visibility.Collapsed; } }
         public Visibility IsVisibleExportButton { get { return _pageInfo.CurrentPage is MainPage ? Visibility.Visible : Visibility.Collapsed; } }
+        public Visibility IsVisibleActivateButton { get { return KeyActivationHelper.IsActivated ? Visibility.Collapsed : Visibility.Visible; } }
         public bool IsResourcesColumnVisible { get { return _projectInfo.IsResourcesColumnVisible; } set { _projectInfo.IsResourcesColumnVisible = value; } }
         public bool IsPropertiesColumnVisible { get { return _projectInfo.IsPropertiesColumnVisible; } set { _projectInfo.IsPropertiesColumnVisible = value; } }
         public MainViewModel(PageInfo pageInfo, CreateProjectModel createProjectModel, CurrentProjectInfo projectInfo) {
+            if (!KeyActivationHelper.CheckActivation())
+                KeyActivationHelper.ShowDialog();
             CurrentPage = new ProjectsListPage();
             _pageInfo = pageInfo;
             _pageInfo.CurrentPage = CurrentPage;
@@ -59,6 +63,10 @@ namespace OpenCVVideoRedactor.ViewModel
         public ICommand AboutWindowShow
         {
             get { return new DelegateCommand(() => { _pageInfo.CurrentPage = new AboutPage(); }); }
+        }
+        public ICommand ActivateProduct
+        {
+            get { return new DelegateCommand(() => { KeyActivationHelper.ShowDialog(); }); }
         }
         public ICommand NavigateToCreatePage
         {

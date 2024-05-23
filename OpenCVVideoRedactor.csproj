@@ -38,6 +38,7 @@
     <PackageReference Include="OpenCvSharp4.WpfExtensions" Version="4.9.0.20240103" />
     <PackageReference Include="PropertyChanged.Fody" Version="4.1.0" />
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.8" />
+    <PackageReference Include="System.Management" Version="8.0.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -47,6 +48,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="activation.info">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="MLModels\deploy.prototxt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

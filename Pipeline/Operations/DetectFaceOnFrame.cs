@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 using DevExpress.Mvvm.Native;
 
-namespace OpenCVVideoRedactor.Pipeline.Operators
+namespace OpenCVVideoRedactor.Pipeline.Operations
 {
     class DetectFaceOnFrame : IFrameOperation
     {
