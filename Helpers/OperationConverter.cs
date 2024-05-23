@@ -42,7 +42,6 @@ namespace OpenCVVideoRedactor.Helpers
                 case nameof(ResizeFrame): return "Изменить размер изображения";
                 case nameof(RotateFrame): return "Поворот изображения";
                 case nameof(ChangeFrameOpacity): return "Изменить прозрачность";
-
                 case nameof(ChangeSaturation): return "Изменить насыщеность";
                 case nameof(ChangeHue): return "Изменить оттеннок";
                 case nameof(ChangeLightness): return "Изменить яркость";
