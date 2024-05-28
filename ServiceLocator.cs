@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using OpenCVVideoRedactor.Model;
 using OpenCVVideoRedactor.Model.Database;
+using OpenCVVideoRedactor.Pipeline;
 using OpenCVVideoRedactor.ViewModel;
 using System;
 using System.Collections.Generic;
@@ -22,14 +23,6 @@ namespace OpenCVVideoRedactor
                 Init();
             }
         }
-        private static void InitModels(ServiceCollection services)
-        {
-            services.AddSingleton<CurrentProjectInfo>();
-            services.AddSingleton<CreateProjectModel>();
-            services.AddSingleton<VideoProcessingModel>();
-            services.AddSingleton<PageInfo>();
-            services.AddSingleton<DatabaseContext>();
-        }
         public static void Init()
         {
             var services = new ServiceCollection();
@@ -42,22 +35,23 @@ namespace OpenCVVideoRedactor
             services.AddTransient<SplitResourceViewModel>();
             services.AddTransient<ModifyOperationViewModel>();
             services.AddTransient<ClonePipelineViewModel>();
-            InitModels(services); 
+            services.AddTransient<PipelineController>();
+            
+            services.AddSingleton<CurrentProjectInfo>();
+            services.AddSingleton<CreateProjectModel>();
+            services.AddSingleton<VideoProcessingModel>();
+            services.AddSingleton<PageInfo>();
+            services.AddSingleton<DatabaseContext>();
 
             _provider = services.BuildServiceProvider();
 
             var db = _provider.GetRequiredService<DatabaseContext>();
             db.Database.EnsureCreated();
-
-           /* foreach (var item in services)
-            {
-                if(item.ServiceType != typeof(DatabaseContext))
-                    _provider.GetRequiredService(item.ServiceType);
-            }*/
         }
+        //public MainPageViewModel MainPageViewModel => _provider!.GetRequiredService<MainPageViewModel>();
+        public static MainPageViewModel MainPageViewModel => _provider!.GetRequiredService<MainPageViewModel>();
         public ProjectsListPageViewModel ProjectListsViewModel => _provider!.GetRequiredService<ProjectsListPageViewModel>();
         public CreateProjectViewModel CreateProjectViewModel => _provider!.GetRequiredService<CreateProjectViewModel>();
-        public MainPageViewModel MainPageViewModel => _provider!.GetRequiredService<MainPageViewModel>();
         public TimelineControlViewModel TimelineControlViewModel => _provider!.GetRequiredService<TimelineControlViewModel>();
         public MainViewModel MainViewModel => _provider!.GetRequiredService<MainViewModel>();
         public PipelineViewModel PipelineViewModel => _provider!.GetRequiredService<PipelineViewModel>();

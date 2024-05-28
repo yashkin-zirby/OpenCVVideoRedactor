@@ -4,13 +4,8 @@ using OpenCVVideoRedactor.Model.Database;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Controls;
 using System.Windows;
 using System.Windows.Input;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.ToolTip;
-using static Xceed.Wpf.Toolkit.Calculator;
 using Microsoft.EntityFrameworkCore;
 using OpenCVVideoRedactor.Helpers;
 

@@ -13,10 +13,13 @@
 
     <Grid Background="#595965">
         <Grid.RowDefinitions>
+            <RowDefinition Height="30px"/>
             <RowDefinition/>
-            <RowDefinition Height="25px"/>
         </Grid.RowDefinitions>
-        <ScrollViewer>
+        <Button HorizontalAlignment="Left" Width="160" Command="{Binding NavigateToCreatePage}">Создать новый проект</Button>
+        <Button HorizontalAlignment="Left" Margin="320,0" Width="160" IsEnabled="{Binding ProjectIsSelected}" Command="{Binding DeleteSelectedProject}">Удалить проект</Button>
+        <Button HorizontalAlignment="Left" Margin="160,0" Width="160" IsEnabled="{Binding ProjectIsSelected}" Command="{Binding OpenSelectedProject}">Открыть</Button>
+        <ScrollViewer Grid.Row="1">
             <ListView Background="#595965" ItemsSource="{Binding Projects}" SelectedIndex="{Binding SelectedProjectIndex}" HorizontalContentAlignment="Stretch">
                 <i:Interaction.Triggers>
                     <i:EventTrigger EventName="PreviewMouseDoubleClick">
@@ -25,14 +28,19 @@
                 </i:Interaction.Triggers>
                 <ListView.ItemTemplate>
                     <DataTemplate DataType="db:Project">
-                        <TextBlock Background="#494949" Padding="5,2" Text="{Binding Path=DataFolder}" FontSize="14" Foreground="#F0F0FF"/>
+                        <DockPanel>
+                            <TextBlock Background="#494949" Padding="10,2" Text="{Binding Path=Title}" FontWeight="Bold" FontSize="14" Foreground="#F0F0FF"/>
+                            <TextBlock Background="#494949" Padding="5,2" Text="{Binding Path=VideoHeight}" FontSize="14" Foreground="#F0F0FF"/>
+                            <TextBlock Background="#494949" Padding="0,2" Text="x" FontSize="14" Foreground="#F0F0FF"/>
+                            <TextBlock Background="#494949" Padding="5,2" Text="{Binding Path=VideoWidth}" FontSize="14" Foreground="#F0F0FF"/>
+                            <TextBlock Background="#494949" Padding="10,2,0,0" Text="{Binding Path=VideoFps}" FontSize="14" Foreground="#F0F0FF"/>
+                            <TextBlock Background="#494949" Padding="2,2" Text="fps" FontSize="14" Foreground="#F0F0FF"/>
+                            <TextBlock Background="#494949" Padding="50,2" Text="{Binding Path=DataFolder}" TextAlignment="Left" FontSize="14" Foreground="#F0F0FF"/>
+                        </DockPanel>
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
         </ScrollViewer>
-        <Button Grid.Row="1" HorizontalAlignment="Left" Width="160" Command="{Binding NavigateToCreatePage}">Создать новый проект</Button>
-        <Button Grid.Row="1" HorizontalAlignment="Center" Width="160" IsEnabled="{Binding ProjectIsSelected}" Command="{Binding DeleteSelectedProject}">Удалить проект</Button>
-        <Button Grid.Row="1" HorizontalAlignment="Right" Width="160" IsEnabled="{Binding ProjectIsSelected}" Command="{Binding OpenSelectedProject}">Открыть</Button>
         <Border Grid.ColumnSpan="3" Grid.RowSpan="3" Background="#88444455" Visibility="{Binding LoaderVisibility}">
             <Ellipse Width="100" Height="100" StrokeThickness="3" RenderTransformOrigin="0.5, 0.5" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <Ellipse.Stroke>

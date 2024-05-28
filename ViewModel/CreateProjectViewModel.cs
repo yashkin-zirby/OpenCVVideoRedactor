@@ -3,12 +3,7 @@ using OpenCVVideoRedactor.Model;
 using OpenCVVideoRedactor.Model.Database;
 using OpenCVVideoRedactor.View;
 using System;
-using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Input;
 using System.Windows.Media;
 using Ookii.Dialogs.Wpf;
@@ -91,6 +86,11 @@ namespace OpenCVVideoRedactor.ViewModel
             get
             {
                 return new DelegateCommand(() => {
+                    if (Directory.Exists(DataFolder))
+                    {
+                        MessageBox.Show($"Директория {DataFolder} занята. Выберете другое местоположение или имя проекта");
+                        return;
+                    }
                     if(Title.Length > 0 && DataFolder.Length > 0)
                         _pageInfo.CurrentPage = new FinishProjectCreationPage();
                 });

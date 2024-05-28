@@ -53,13 +53,13 @@ namespace OpenCVVideoRedactor.ViewModel
             }
         }
         private VideoProcessingModel _processingModel;
-        public PipelineViewModel(CurrentProjectInfo projectInfo, VideoProcessingModel processingModel) {
+        public PipelineViewModel(CurrentProjectInfo projectInfo, VideoProcessingModel processingModel, PipelineController controller) {
             _currentProject = projectInfo;
             _processingModel = processingModel;
             projectInfo.PropertyChanged += ProjectPropertyChanged;
             if (projectInfo.ProjectInfo != null)
             {
-                _controller = new PipelineController(projectInfo);
+                _controller = controller;
                 CurrentFrame = _controller.GetFrame(projectInfo.CurrentTime, _selectedRectId);
             }
             projectInfo.VideoCompileEvent += VideoCompile;

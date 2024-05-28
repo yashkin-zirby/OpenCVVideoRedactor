@@ -63,7 +63,11 @@ namespace OpenCVVideoRedactor.ViewModel
                         Task.Factory.StartNew(() =>
                         {
                             _currentProjectInfo.ProjectInfo = Projects[SelectedProjectIndex];
-                            App.Current.Dispatcher.Invoke(() => _pageInfo.CurrentPage = new MainPage());
+                            var mainPageViewModel = ServiceLocator.MainPageViewModel;
+                            App.Current.Dispatcher.Invoke(() => {
+                                _pageInfo.CurrentPage = new MainPage();
+                                _pageInfo.CurrentPage.DataContext = mainPageViewModel;
+                            });
                         });
                     }
                 });
@@ -79,7 +83,7 @@ namespace OpenCVVideoRedactor.ViewModel
                     _createProjectModel.BackgroundColor = Colors.Black;
                     _createProjectModel.VideoWidth = 640;
                     _createProjectModel.VideoHeight = 480;
-                    _createProjectModel.VideoFps = 1;
+                    _createProjectModel.VideoFps = 30;
                     _pageInfo.CurrentPage = new CreateProjectPage();
                 });
             }

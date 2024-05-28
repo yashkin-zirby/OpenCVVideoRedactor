@@ -17,6 +17,8 @@ using OpenCvSharp.Extensions;
 using OpenCVVideoRedactor.Helpers;
 using DevExpress.Mvvm.Native;
 using Microsoft.Win32;
+using OpenCVVideoRedactor.PopUpWindows;
+using System.Windows;
 
 namespace OpenCVVideoRedactor.Pipeline
 {
@@ -136,27 +138,39 @@ namespace OpenCVVideoRedactor.Pipeline
             if (_resources.Count == 0) return;
             var tempFile = System.IO.Path.Combine(project.DataFolder, "temp_output.mp4");
             var output = System.IO.Path.Combine(project.DataFolder, "output.mp4");
+            Dictionary<string, object> codecs = new Dictionary<string, object>()
+                {
+                    { "H264 (рекомендуемый)", FourCC.H264 },
+                    { "MJPG", FourCC.MJPG },
+                    { "XVID", FourCC.XVID },
+                    { "MP42", FourCC.MP42 },
+                    { "DIVX", FourCC.DIVX },
+                    { "AVC", FourCC.AVC },
+                    { "CVID", FourCC.CVID },
+                };
+            int? selectedCodec = (int?)SelectionBox.ShowDialog("Экспорт видео", "Выбирите кодек для кодирования видео", codecs);
+            if (selectedCodec == null)
+            {
+                return;
+            }
+            if(VideoIsReady && File.Exists(output))
+            {
+                var codecName = FFProbe.Analyse(output).PrimaryVideoStream?.CodecName ?? "";
+                int codec = FourCC.FromString(codecName);
+                if (codec / 100 != selectedCodec.Value / 100)
+                {
+                    File.Delete(output);
+                    VideoIsReady = false;
+                }
+            }
             if (!VideoIsReady)
             {
                 var Duration = _resources[0].MaxDuration;
                 using (var writer = new VideoWriter())
                 {
-                    //MP42
-                    if(!writer.Open(tempFile, FourCC.H264, project.VideoFps, new OpenCvSharp.Size(project.VideoWidth, project.VideoHeight))){
-                        var works = false;
-                        System.Windows.MessageBox.Show("Кодек по умолчанию не работает. Попытка поменять кодек");
-                        foreach (var codec in new FourCC[] { FourCC.MP42, FourCC.DIVX, FourCC.AVC, FourCC.CVID, FourCC.MJPG })
-                        {
-                            if(writer.Open(tempFile, codec, project.VideoFps, new OpenCvSharp.Size(project.VideoWidth, project.VideoHeight)))
-                            {
-                                works = true; break;
-                            }
-                        }
-                        if (!works)
-                        {
-                            System.Windows.MessageBox.Show("Ни один из используемых кодеков не поддерживается");
-                            return;
-                        }
+                    // H264
+                    if (!writer.Open(tempFile, selectedCodec.Value, project.VideoFps, new OpenCvSharp.Size(project.VideoWidth, project.VideoHeight))){
+                        writer.Open(tempFile, FourCC.H264, project.VideoFps, new OpenCvSharp.Size(project.VideoWidth, project.VideoHeight));
                     }
                     long ticksPerFrame = (long)10000000.0 / project.VideoFps;
                     int frameI = 0;
@@ -190,7 +204,7 @@ namespace OpenCVVideoRedactor.Pipeline
                                     }
                                 }
                             }
-                            callback.Invoke(i, Duration);
+                            if(i!=Duration)callback.Invoke(i, Duration);
                         }
                         writer.Write(frame);
                     }
@@ -224,6 +238,7 @@ namespace OpenCVVideoRedactor.Pipeline
                 if (output == saveFileDialog.FileName) return;
                 await FFMpegArguments.FromFileInput(output).OutputToFile(saveFileDialog.FileName, true).ProcessAsynchronously();
             }
+            callback.Invoke(1, 1);
             VideoIsReady = true;
         }
     }

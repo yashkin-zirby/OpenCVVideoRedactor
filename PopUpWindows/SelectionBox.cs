@@ -10,18 +10,11 @@ using System.Windows.Media;
 
 namespace OpenCVVideoRedactor.PopUpWindows
 {
-    public class InputBox
+    public class SelectionBox
     {
-        public static class Validate
+        public static object? ShowDialog(string title, string text, Dictionary<string, object> list, int defaultElement = 0)
         {
-            public static bool IsInteger(string text)=>int.TryParse(text, out int result);
-            public static bool IsDouble(string text) => double.TryParse(text, out double result);
-            public static bool NoValidate(string text) => true;
-        }
-
-        public static string ShowDialog(string title, string text, string defaultValue="", Predicate<string>? validate = null, string invalidMessage="Некорректный значение", Func<string,string>? onInput = null)
-        {
-            string result = "";
+            string result = list.Keys.ElementAt(defaultElement);
             App.Current.Dispatcher.Invoke(() => {
                 Window Box = new Window();
                 FontFamily font = new FontFamily("Avenir");
@@ -29,7 +22,7 @@ namespace OpenCVVideoRedactor.PopUpWindows
                 StackPanel stackPanel = new StackPanel();
                 Brush BoxBackgroundColor = Brushes.WhiteSmoke;
                 Brush InputBackgroundColor = Brushes.Ivory;
-                TextBox input = new TextBox();
+                ComboBox input = new ComboBox();
                 Button okButton = new Button();
                 Button cancelButton = new Button();
                 Box.Height = 200;
@@ -54,27 +47,22 @@ namespace OpenCVVideoRedactor.PopUpWindows
                 input.FontFamily = font;
                 input.FontSize = FontSize;
                 input.HorizontalAlignment = HorizontalAlignment.Center;
-                input.Text = defaultValue;
+                input.Text = result;
                 input.MinWidth = 200;
                 input.Margin = new Thickness(10);
-                input.TextChanged += (e, args) =>
+                input.ItemsSource = list.Keys;
+                input.SelectedIndex = defaultElement;
+                input.SelectionChanged += (e, args) =>
                 {
-                    if (onInput != null)
-                    {
-                        int index = input.CaretIndex;
-                        input.Text = onInput(input.Text);
-                        input.CaretIndex = index;
-                    }
+                    input.Text = (string)input.SelectedValue;
+                    var val = input.SelectedValue;
                 };
                 input.KeyDown += (e, args) => {
                     switch (args.Key)
                     {
                         case Key.Enter:
                             {
-                                if (validate != null && validate(input.Text))
-                                    Box.Close();
-                                else
-                                    MessageBox.Show(invalidMessage);
+                                Box.Close();
                             }
                             break;
                         case Key.Escape:
@@ -90,10 +78,7 @@ namespace OpenCVVideoRedactor.PopUpWindows
                 okButton.Width = 70;
                 okButton.Height = 30;
                 okButton.Click += (e, args) => {
-                    if (validate != null && validate(input.Text))
-                        Box.Close();
-                    else
-                        MessageBox.Show(invalidMessage);
+                    Box.Close();
                 };
                 okButton.Margin = new Thickness(20);
                 okButton.Content = "Ok";
@@ -120,7 +105,8 @@ namespace OpenCVVideoRedactor.PopUpWindows
                 Box.ShowDialog();
                 result = input.Text;
             });
-            return result;
+            if (result == "" || result == null) return null;
+            return list[result];
         }
     }
 }

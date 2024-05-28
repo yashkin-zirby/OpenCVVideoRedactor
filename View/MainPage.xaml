@@ -9,7 +9,6 @@
       xmlns:local="clr-namespace:OpenCVVideoRedactor.View"
       xmlns:db="clr-namespace:OpenCVVideoRedactor.Model.Database"
       mc:Ignorable="d" 
-      DataContext="{Binding MainPageViewModel, Source={StaticResource ServiceLocatorObject}}"
       d:DesignHeight="700" d:DesignWidth="1050"
       Title="MainPage">
     <Page.Resources>
