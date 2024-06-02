@@ -75,7 +75,7 @@
                     <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
                 <Button Style="{StaticResource ResourceButton}" Command="{Binding AddResource}">Добавить</Button>
-                <Button Grid.Column="1" Style="{StaticResource ResourceButton}" Command="{Binding RemoveResource}">Удалить</Button>
+                <Button Grid.Column="1" Style="{StaticResource ResourceButton}" Command="{Binding RemoveResource}" IsEnabled="{Binding ItemIsSelected}">Удалить</Button>
             </Grid>
             <Expander Header="Видео" Style="{StaticResource FileListExpander}">
                 <ListBox ItemsSource="{Binding Videos}" Style="{StaticResource FileList}" SelectedValue="{Binding SelectedResource}">

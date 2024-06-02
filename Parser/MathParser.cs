@@ -178,7 +178,7 @@ namespace OpenCVVideoRedactor
                     Variable? variable = variables.FirstOrDefault(n => n.ToString() == str);
                     return variable ?? new Variable(str);
                 }
-                return new NotDefinedExpression();
+                return new NotDefinedExpression(str);
             }
             private Function ParseFunction(string func)
             {

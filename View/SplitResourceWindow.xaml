@@ -4,6 +4,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:h="clr-namespace:OpenCVVideoRedactor.Helpers"
         xmlns:local="clr-namespace:OpenCVVideoRedactor.View"
         mc:Ignorable="d"
         DataContext="{Binding SplitResourceViewModel, Source={StaticResource ServiceLocatorObject}}"
@@ -17,10 +18,13 @@
             <RowDefinition/>
             <RowDefinition Height="40"/>
         </Grid.RowDefinitions>
+        <i:Interaction.Behaviors>
+            <h:FocusOnClickBehavior/>
+        </i:Interaction.Behaviors>
         <Border Grid.Column="1" BorderBrush="#191919" BorderThickness="2,0,0,2">
-            <StackPanel>
-                <TextBlock FontSize="14" Foreground="#F0F0F0" TextAlignment="Center">Временные метки</TextBlock>
-                <ListView Background="#494949" MinHeight="40" ItemsSource="{Binding Markers}" SelectedValue="{Binding SelectedMarker}">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Top" FontSize="14" Foreground="#F0F0F0" TextAlignment="Center">Временные метки</TextBlock>
+                <ListView DockPanel.Dock="Top"  Background="#494949" MinHeight="40" ItemsSource="{Binding Markers}" SelectedValue="{Binding SelectedMarker}">
                     <i:Interaction.Triggers>
                         <i:EventTrigger EventName="PreviewMouseLeftButtonDown">
                             <i:InvokeCommandAction Command="{Binding DeleteMarkerCommand}" PassEventArgsToCommand="True"/>
@@ -37,9 +41,10 @@
                         </DataTemplate>
                     </ListView.ItemTemplate>
                 </ListView>
-                <Button Grid.Column="1" Height="20" Background="#292939" FontSize="12" Foreground="#F0F0F0"
+                <Button DockPanel.Dock="Top" Grid.Column="1" Height="20" Background="#292939" FontSize="12" Foreground="#F0F0F0"
                         Command="{Binding AddMarkerCommand}">Добавить метку</Button>
-            </StackPanel>
+                <TextBox DockPanel.Dock="Top" VerticalAlignment="Bottom" Style="{StaticResource PropertyTextBox}" Text="{Binding CurrentTime}"></TextBox>
+            </DockPanel>
         </Border>
         <Button BorderBrush="#393949" Grid.Column="1" Grid.Row="1" Background="#292939" BorderThickness="2,0,0,2" FontSize="14" Foreground="#F0F0F0" 
                 Command="{Binding ApplySplitCommand}" CommandParameter="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}" Content="Применить">
@@ -56,7 +61,6 @@
                 </i:EventTrigger>
             </i:Interaction.Triggers>
         </MediaElement>
-        <TextBlock Text="{Binding Duration}"></TextBlock>
         <Border Grid.RowSpan="2" Grid.ColumnSpan="2" Background="#AA444455" Visibility="{Binding IsLoading,Converter={StaticResource BoolToVisibility}}">
             <ProgressBar Maximum="{Binding Duration}" Value="{Binding LoadingValue}" Minimum="0" Foreground="Aqua" Height="10"/>
         </Border>

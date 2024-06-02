@@ -1,6 +1,7 @@
 ﻿using DevExpress.Mvvm;
 using FFMpegCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Xaml.Behaviors.Core;
 using OpenCVVideoRedactor.Helpers;
 using OpenCVVideoRedactor.Model;
@@ -29,12 +30,12 @@ namespace OpenCVVideoRedactor.ViewModel
         private DatabaseContext _dbContext;
         public List<TimeSpan> Markers { get; set; } = new List<TimeSpan>();
         public long CurrentPossition { get; set; }
+        public TimeSpan CurrentTime { get { return TimeSpan.FromTicks(CurrentPossition); } set { CurrentPossition = value.Ticks; } }
         public TimeSpan? SelectedMarker { get; set; } = null;
         public long Duration { get; set; } = 0;
         public string ResourcePath { get; set; } = "";
         public bool IsPaused { get; set; }
         public bool IsLoading { get; set; }
-        public MediaState MediaState { get; set; } = MediaState.Play;
         public long LoadingValue { get; set; }
 
         public SplitResourceViewModel(CurrentProjectInfo projectInfo, DatabaseContext dbContext) {
@@ -69,7 +70,6 @@ namespace OpenCVVideoRedactor.ViewModel
                     var mediaElement = args.Source as MediaElement;
                     if(mediaElement != null)
                     {
-                        MediaState = MediaState.Manual;
                         mediaElement.Pause();
                         if (_projectInfo.SelectedResource.Type != (int)ResourceType.IMAGE)
                         {
@@ -77,7 +77,7 @@ namespace OpenCVVideoRedactor.ViewModel
                             StopCommand = new DelegateCommand(() => { mediaElement.Pause(); IsPaused = true; });
                             RaisePropertiesChanged(nameof(PlayCommand), nameof(StopCommand));
                             DispatcherTimer timer = new DispatcherTimer();
-                            timer.Interval = TimeSpan.FromSeconds(0.25);
+                            timer.Interval = TimeSpan.FromSeconds(0.05);
                             timer.Tick += (sender, args) =>
                             {
                                 CurrentPossition = mediaElement.Position.Ticks;
@@ -90,6 +90,7 @@ namespace OpenCVVideoRedactor.ViewModel
                                     if (!IsPaused) mediaElement.Pause();
                                     mediaElement.Position = TimeSpan.FromTicks(CurrentPossition);
                                     if (!IsPaused) mediaElement.Play();
+                                    RaisePropertiesChanged(nameof(CurrentTime));
                                 }
                             };
                         }

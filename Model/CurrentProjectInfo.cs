@@ -196,10 +196,5 @@ namespace OpenCVVideoRedactor.Model
             }
         }
         public event PropertyChangedEventHandler? PropertyChanged;
-        public event EventHandler? VideoCompileEvent;
-        public void CompileVideo()
-        {
-            if (VideoCompileEvent != null) VideoCompileEvent.Invoke(null,new EventArgs());
-        }
     }
 }

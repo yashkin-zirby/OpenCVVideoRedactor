@@ -89,10 +89,9 @@ namespace OpenCVVideoRedactor.Helpers
                 for (int i = 0; File.Exists(audioFileName); i++) {
                     audioFileName = Path.Combine(audiosDir,Path.GetFileNameWithoutExtension(newName) + i + "." + audioStream.CodecName);
                 }
-                FFMpegArguments.FromFileInput(file, true, args => args.WithCustomArgument("-hwaccel cuda"))
+                FFMpegArguments.FromFileInput(file, true)
                     .OutputToFile(videoFileName, true, args => {
                         args.WithCustomArgument($"-map 0:a \"{audioFileName}\" -map 0:v");
-                        args.WithFramerate(project.VideoFps);
                     }).ProcessSynchronously();
                 ref_audio = new Resource();
                 ref_audio.Name = Path.GetFileName(audioFileName);
@@ -105,7 +104,7 @@ namespace OpenCVVideoRedactor.Helpers
             }
             else
             {
-                FFMpegArguments.FromFileInput(file, true, args => args.WithCustomArgument("-hwaccel cuda"))
+                FFMpegArguments.FromFileInput(file, true)
                     .OutputToFile(videoFileName, true, args => args.WithFramerate(project.VideoFps))
                     .ProcessSynchronously();
             }

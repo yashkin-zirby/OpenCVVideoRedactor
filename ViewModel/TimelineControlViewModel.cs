@@ -18,6 +18,7 @@ namespace OpenCVVideoRedactor.ViewModel
     {
         private CurrentProjectInfo _currentProjectInfo;
         private DatabaseContext _dbContext;
+        private VideoProcessingModel _videoProcessingModel;
         private double _scale = 0;
         private double _fps = 30;
         public double Scale { 
@@ -29,6 +30,7 @@ namespace OpenCVVideoRedactor.ViewModel
             }
         }
         public double ActualScale { get { return Math.Pow(10, _scale); } }
+        public string VideoState { get; set; } = "▶️";
         public string ScaleString { get { return $"Масштаб: {Math.Round(ActualScale*100)}%"; } }
         public TimeSpan CurrentTime { 
             get { return _currentProjectInfo.CurrentTime; }
@@ -43,7 +45,6 @@ namespace OpenCVVideoRedactor.ViewModel
             set
             {
                 _currentProjectInfo.CurrentTime = TimeSpan.FromTicks((long)Math.Round(value * (10000000.0 / _fps)));
-                RaisePropertyChanged(nameof(CurrentTimeTicks));
             }
         }
         public long CurrentTimeTicks
@@ -70,10 +71,15 @@ namespace OpenCVVideoRedactor.ViewModel
                 if(value != null)_currentProjectInfo.SelectedResource = value.Resource;
             }
         }
-        public TimelineControlViewModel(DatabaseContext dbContext, CurrentProjectInfo currentProjectInfo) {
+        public TimelineControlViewModel(DatabaseContext dbContext, CurrentProjectInfo currentProjectInfo, VideoProcessingModel videoProcessingModel) {
+            _videoProcessingModel = videoProcessingModel;
             _currentProjectInfo = currentProjectInfo;
             _dbContext = dbContext;
             _currentProjectInfo.PropertyChanged += ProjectPropertiesChanged;
+            _videoProcessingModel.PropertyChanged += (sender, args) => {
+                if (args.PropertyName == nameof(_videoProcessingModel.IsPlaying))
+                    VideoState = _videoProcessingModel.IsPlaying ? "◼" : "▶️";
+            };
         }
         ~TimelineControlViewModel()
         {
@@ -82,12 +88,18 @@ namespace OpenCVVideoRedactor.ViewModel
         private void ProjectPropertiesChanged(object? sender, PropertyChangedEventArgs eventArgs)
         {
             RaisePropertyChanged(eventArgs.PropertyName);
+            if(eventArgs.PropertyName == nameof(_currentProjectInfo.CurrentTime))
+            {
+                RaisePropertyChanged(nameof(CurrentFrame));
+                RaisePropertiesChanged(nameof(CurrentTimeTicks));
+                return;
+            }
             if(eventArgs.PropertyName == nameof(_currentProjectInfo.SelectedResource)) {
-                RaisePropertyChanged(nameof(IsResourceSelected));
+                RaisePropertyChanged(nameof(IsResourceSelected)); return;
             }
             if(eventArgs.PropertyName == nameof(_currentProjectInfo.ResourcesInUse))
             {
-                RaisePropertyChanged(nameof(StartTextVisibility));
+                RaisePropertyChanged(nameof(StartTextVisibility)); return;
             }
         }
         public ICommand SplitResourceCommand
@@ -119,7 +131,23 @@ namespace OpenCVVideoRedactor.ViewModel
             get
             {
                 return new DelegateCommand(() => {
-                    _currentProjectInfo.CompileVideo();
+                    _videoProcessingModel.CompileVideo();
+                });
+            }
+        }
+        public ICommand PlayVideoCommand
+        {
+            get
+            {
+                return new DelegateCommand(() => {
+                    if(VideoState == "▶️")
+                    {
+                        _videoProcessingModel.PlayVideo();
+                    }
+                    else
+                    {
+                        _videoProcessingModel.StopVideo();
+                    }
                 });
             }
         }

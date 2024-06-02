@@ -16,7 +16,7 @@ namespace OpenCVVideoRedactor
             }
             public static Value ValueFromString(string val)
             {
-                Regex regex = new Regex(@"^(-?)(\d+(\.\d+)?)$");
+                Regex regex = new Regex(@"^(-?)(\d+((\.)\d+)?)$");
                 if (regex.IsMatch(val))
                 {
                     double dVal = Convert.ToDouble(val.Replace(".", ","));
@@ -40,7 +40,7 @@ namespace OpenCVVideoRedactor
             }
             public override string ToString()
             {
-                return _value.ToString();
+                return _value.ToString().Replace(",",".");
             }
 
             public bool SetVarriable(string name, double value)

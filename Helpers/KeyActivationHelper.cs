@@ -1,14 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using System.Management;
-using System.ComponentModel;
 using OpenCVVideoRedactor.PopUpWindows;
 using System.Text.RegularExpressions;
 using System.Windows;
+using System.Net.NetworkInformation;
+using Microsoft.Win32;
 
 namespace OpenCVVideoRedactor.Helpers
 {
@@ -28,30 +27,15 @@ namespace OpenCVVideoRedactor.Helpers
         public static bool IsActivated { get { return _isActivated; } }
         private static string GetMACAddress()
         {
-            ManagementClass mc = new ManagementClass("Win32_NetworkAdapterConfiguration");
-            ManagementObjectCollection moc = mc.GetInstances();
-            string MACAddress = String.Empty;
-            foreach (ManagementObject mo in moc)
-            {
-                if (MACAddress == String.Empty)
-                { // only return MAC Address from first card
-                    if ((bool)mo["IPEnabled"] == true) MACAddress = mo["MacAddress"].ToString();
-                }
-                mo.Dispose();
-            }
-            return MACAddress;
+            return NetworkInterface.GetAllNetworkInterfaces()
+                .Where(nic => nic.OperationalStatus == OperationalStatus.Up)
+                .Select(nic => nic.GetPhysicalAddress().ToString()).FirstOrDefault() ?? "";
         }
-        private static string GetProcessorID()
+        private static string GetWindowsID()
         {
-            var search = new ManagementObjectSearcher("SELECT * FROM Win32_baseboard");
-            var mobos = search.Get();
-            string id = "";
-            foreach (var m in mobos)
-            {
-                var serial = m["SerialNumber"] as string;
-                if (serial != null) id = serial;
-            }
-            return id;
+            var registryKey = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows NT\CurrentVersion", false);
+            if(registryKey != null) registryKey.GetValue("DigitalProductId");
+            return "";
         }
         public static void ShowDialog()
         {
@@ -67,7 +51,7 @@ namespace OpenCVVideoRedactor.Helpers
             SHA256 sha256 = SHA256.Create();
             if (code.Length != 16) return false;
             string macAddres = GetMACAddress();
-            string processorId = GetProcessorID();
+            string processorId = GetWindowsID();
             string hash = BitConverter.ToString(
                 sha256.ComputeHash(
                         Encoding.UTF8.GetBytes(code+macAddres+processorId)
@@ -79,11 +63,12 @@ namespace OpenCVVideoRedactor.Helpers
         }
         public static bool CheckActivation()
         {
+            if (!File.Exists("activation.info")) File.WriteAllText("activation.info","");
             string activation = File.ReadAllText("activation.info");
             if (activation.Length != 80) return false; //16 key + 64 hash
             SHA256 sha256 = SHA256.Create();
             string macAddres = GetMACAddress();
-            string processorId = GetProcessorID();
+            string processorId = GetWindowsID();
             string code = activation.Substring(0, 16);
             if(!_keys.Contains(code)) return false;
             string hash = BitConverter.ToString(

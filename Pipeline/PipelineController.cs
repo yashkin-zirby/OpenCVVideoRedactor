@@ -19,6 +19,7 @@ using DevExpress.Mvvm.Native;
 using Microsoft.Win32;
 using OpenCVVideoRedactor.PopUpWindows;
 using System.Windows;
+using System.Threading.Tasks;
 
 namespace OpenCVVideoRedactor.Pipeline
 {
@@ -134,8 +135,8 @@ namespace OpenCVVideoRedactor.Pipeline
             }
             return null;
         }
-        public async void GenerateVideo(Action<long, long> callback) {
-            if (_resources.Count == 0) return;
+        public async Task<bool> GenerateVideo(Action<long, long> callback, string useCodec = "", bool export = true) {
+            if (_resources.Count == 0) return false;
             var tempFile = System.IO.Path.Combine(project.DataFolder, "temp_output.mp4");
             var output = System.IO.Path.Combine(project.DataFolder, "output.mp4");
             Dictionary<string, object> codecs = new Dictionary<string, object>()
@@ -148,19 +149,26 @@ namespace OpenCVVideoRedactor.Pipeline
                     { "AVC", FourCC.AVC },
                     { "CVID", FourCC.CVID },
                 };
-            int? selectedCodec = (int?)SelectionBox.ShowDialog("Экспорт видео", "Выбирите кодек для кодирования видео", codecs);
-            if (selectedCodec == null)
-            {
-                return;
+            int? selectedCodec = null;
+            if (codecs.ContainsKey(useCodec)) {
+                selectedCodec = (int)codecs[useCodec];
             }
-            if(VideoIsReady && File.Exists(output))
+            else
             {
-                var codecName = FFProbe.Analyse(output).PrimaryVideoStream?.CodecName ?? "";
-                int codec = FourCC.FromString(codecName);
-                if (codec / 100 != selectedCodec.Value / 100)
+                selectedCodec = (int?)SelectionBox.ShowDialog("Экспорт видео", "Выбирите кодек для кодирования видео", codecs);
+                if (selectedCodec == null)
                 {
-                    File.Delete(output);
-                    VideoIsReady = false;
+                    return false;
+                }
+                if (VideoIsReady && File.Exists(output))
+                {
+                    var codecName = FFProbe.Analyse(output).PrimaryVideoStream?.CodecName ?? "";
+                    int codec = FourCC.FromString(codecName);
+                    if (codec / 100 != selectedCodec.Value / 100)
+                    {
+                        File.Delete(output);
+                        VideoIsReady = false;
+                    }
                 }
             }
             if (!VideoIsReady)
@@ -169,12 +177,12 @@ namespace OpenCVVideoRedactor.Pipeline
                 using (var writer = new VideoWriter())
                 {
                     // H264
-                    if (!writer.Open(tempFile, selectedCodec.Value, project.VideoFps, new OpenCvSharp.Size(project.VideoWidth, project.VideoHeight))){
+                    if (!writer.Open(tempFile, selectedCodec ?? FourCC.H264, project.VideoFps, new OpenCvSharp.Size(project.VideoWidth, project.VideoHeight))){
                         writer.Open(tempFile, FourCC.H264, project.VideoFps, new OpenCvSharp.Size(project.VideoWidth, project.VideoHeight));
                     }
                     long ticksPerFrame = (long)10000000.0 / project.VideoFps;
                     int frameI = 0;
-                    for (long i = 0; i < Duration; i += ticksPerFrame)
+                    for (long i = 0; i <= Duration; i += ticksPerFrame)
                     {
                         Mat frame = _background.Clone();
                         foreach (var resource in _resources.Where(n => n.Resource.IsNotAudio))
@@ -204,7 +212,7 @@ namespace OpenCVVideoRedactor.Pipeline
                                     }
                                 }
                             }
-                            if(i!=Duration)callback.Invoke(i, Duration);
+                            if(i<Duration)callback.Invoke(i, Duration);
                         }
                         writer.Write(frame);
                     }
@@ -223,23 +231,27 @@ namespace OpenCVVideoRedactor.Pipeline
                         var audioArgs = FFMpegArguments.FromFileInput(output, true)
                                  .AddFileInput(fileName)
                                  .OutputToFile(tempFile, true, options =>
-                             options.WithCustomArgument($"-filter_complex \"[1:a]adelay={delay.TotalSeconds}s:all=1[a1];[0:a][a1]amix\""));
+                             options.WithCustomArgument($"-filter_complex \"[1:a]adelay={delay.TotalSeconds.ToString().Replace(",",".")}s:all=1[a1];[0:a][a1]amix\""));
                         await audioArgs.ProcessAsynchronously();
                         File.Delete(output);
                         File.Move(tempFile, output);
                     }
                 }
             }
-            SaveFileDialog saveFileDialog = new SaveFileDialog();
-            saveFileDialog.Filter = "video files|*.mp4;*.avi";
-            var value = saveFileDialog.ShowDialog();
-            if (value.HasValue && value.Value)
+            if (export)
             {
-                if (output == saveFileDialog.FileName) return;
-                await FFMpegArguments.FromFileInput(output).OutputToFile(saveFileDialog.FileName, true).ProcessAsynchronously();
+                SaveFileDialog saveFileDialog = new SaveFileDialog();
+                saveFileDialog.Filter = "video files|*.mp4;*.avi";
+                var value = saveFileDialog.ShowDialog();
+                if (value.HasValue && value.Value)
+                {
+                    if (output == saveFileDialog.FileName) return true;
+                    await FFMpegArguments.FromFileInput(output).OutputToFile(saveFileDialog.FileName, true).ProcessAsynchronously();
+                }
             }
-            callback.Invoke(1, 1);
             VideoIsReady = true;
+            callback.Invoke(1, 1);
+            return true;
         }
     }
 }

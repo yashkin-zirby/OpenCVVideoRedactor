@@ -8,7 +8,10 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.TaskbarClock;
 
 namespace OpenCVVideoRedactor.ViewModel
@@ -20,7 +23,11 @@ namespace OpenCVVideoRedactor.ViewModel
         private bool _frameProcessing = false;
         private long _selectedRectId = 0;
         private bool _isPlaying = false;
-        public bool IsPlaying { get { return _isPlaying; } set{ /*_isPlaying = value;*/ RaisePropertiesChanged(nameof(IsPlaying),nameof(IsNotPlaying)); } }
+        private bool _isPaused = false;
+        private Action? _play = null;
+        private Action? _stop = null;
+        public TimeSpan VideoCurrentTime { get; set; }
+        public bool IsPlaying { get { return _isPlaying; } set{ _isPlaying = value; if (!value) FilePath = null; RaisePropertiesChanged(nameof(IsPlaying),nameof(IsNotPlaying)); } }
         public bool IsNotPlaying { get { return !_isPlaying; } }
         public string? FilePath { get; set; }
         public ImageSource? CurrentFrame { get; set; }
@@ -62,28 +69,98 @@ namespace OpenCVVideoRedactor.ViewModel
                 _controller = controller;
                 CurrentFrame = _controller.GetFrame(projectInfo.CurrentTime, _selectedRectId);
             }
-            projectInfo.VideoCompileEvent += VideoCompile;
+            _processingModel.VideoEvent += VideoEventHandler;
         }
 
-        private void VideoCompile(object? sender, EventArgs e)
+        private void VideoEventHandler(object? sender, VideoEventArgs e)
         {
             if(_controller != null && !_processingModel.IsProcessing)
             {
-                Task.Factory.StartNew(() => {
-                    _processingModel.IsProcessing = true;
-                    _controller.GenerateVideo((time, duration) => { _processingModel.CurrentProcessingValue = time; _processingModel.MaxProcessingValue = duration; });
-                    _processingModel.IsProcessing = false;
-                    IsPlaying = _controller.VideoIsReady;
+                if (e.VideoEventType == "compile")
+                {
+                    Task.Factory.StartNew(async () =>
+                    {
+                        _processingModel.IsProcessing = true;
+                        await _controller.GenerateVideo((time, duration) => { 
+                            _processingModel.CurrentProcessingValue = time; 
+                            _processingModel.MaxProcessingValue = duration; 
+                            if(time == duration) _processingModel.IsProcessing = false;
+                            IsPlaying = _controller.VideoIsReady;
+                        });
+                    });
+                    return;
+                }
+                if (!_controller.VideoIsReady)
+                {
+                    Task.Factory.StartNew(async () =>
+                    {
+                        _processingModel.IsProcessing = true;
+                        await _controller.GenerateVideo((time, duration) => {
+                            _processingModel.CurrentProcessingValue = time;
+                            _processingModel.MaxProcessingValue = duration;
+                            if (time == duration) _processingModel.IsProcessing = false;
+                            IsPlaying = _controller.VideoIsReady;
+                        }, "H264 (рекомендуемый)", false);
+                        if (_currentProject.ProjectInfo != null) FilePath = System.IO.Path.Combine(_currentProject.ProjectInfo.DataFolder, "output.mp4");
+                        if (_play != null) _play();
+                    });
+                    return;
+                }
+                if (e.VideoEventType == "play")
+                {
+                    if(_currentProject.ProjectInfo != null) FilePath = System.IO.Path.Combine(_currentProject.ProjectInfo.DataFolder, "output.mp4");
+                    if (_play != null) _play();
+                }
+                else
+                {
+                    if (_stop != null) _stop();
+                }
+            }
+        }
+        public ICommand ConfigureVideoView
+        {
+            get
+            {
+                return new DelegateCommand<RoutedEventArgs>((args) => {
+
+                    var mediaElement = args.Source as MediaElement;
+                    if (mediaElement != null)
+                    {
+                        DispatcherTimer timer = new DispatcherTimer();
+                        timer.Interval = TimeSpan.FromSeconds(0.05);
+                        timer.Tick += (sender, args) =>
+                        {
+                            if (_controller != null && _controller.VideoIsReady)
+                                _currentProject.CurrentTime = mediaElement.Position;
+                            if (mediaElement.Position.Ticks >= _currentProject.MaxDuration && _stop != null) _stop();
+                        };
+                        _play = () => { mediaElement.Play(); _isPaused = false; timer.Start(); _processingModel.IsPlaying = true; };
+                        _stop = () => { mediaElement.Pause(); _isPaused = true; timer.Stop(); _processingModel.IsPlaying = false; };
+                        mediaElement.Position = _currentProject.CurrentTime;
+                        if(IsPlaying)_play();
+                        PropertyChanged += (sender, args) =>
+                        {
+                            if (args.PropertyName == nameof(VideoCurrentTime))
+                            {
+                                if (!_isPaused) mediaElement.Pause();
+                                mediaElement.Position = VideoCurrentTime;
+                                if (!_isPaused) mediaElement.Play();
+                            }
+                        };
+                    }
                 });
             }
         }
-
         private readonly object _currentTimeChanged = new object();
         private void ProjectPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             RaisePropertiesChanged(e.PropertyName);
             if(e.PropertyName == nameof(_currentProject.CurrentTime))
             {
+                if (_controller != null && _controller.VideoIsReady)
+                {
+                    VideoCurrentTime = _currentProject.CurrentTime;
+                }
                 lock (_currentTimeChanged)
                     Monitor.PulseAll(_currentTimeChanged);
                 Task.Run(() =>
@@ -149,7 +226,7 @@ namespace OpenCVVideoRedactor.ViewModel
         ~PipelineViewModel()
         {
             _currentProject.PropertyChanged -= ProjectPropertyChanged;
-            _currentProject.VideoCompileEvent -= VideoCompile;
+            _processingModel.VideoEvent -= VideoEventHandler;
         }
     }
 }

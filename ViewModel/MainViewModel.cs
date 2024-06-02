@@ -17,16 +17,18 @@ namespace OpenCVVideoRedactor.ViewModel
         private PageInfo _pageInfo;
         private CreateProjectModel _createProjectModel;
         private CurrentProjectInfo _projectInfo;
+        private VideoProcessingModel _videoProcessingModel;
         public Visibility IsVisibleSaveButton { get { return _projectInfo.ProjectInfo != null ? Visibility.Visible : Visibility.Collapsed; } }
         public Visibility IsVisibleImportButton { get { return _pageInfo.CurrentPage is MainPage ? Visibility.Visible : Visibility.Collapsed; } }
         public Visibility IsVisibleExportButton { get { return _pageInfo.CurrentPage is MainPage ? Visibility.Visible : Visibility.Collapsed; } }
         public Visibility IsVisibleActivateButton { get { return KeyActivationHelper.IsActivated ? Visibility.Collapsed : Visibility.Visible; } }
         public bool IsResourcesColumnVisible { get { return _projectInfo.IsResourcesColumnVisible; } set { _projectInfo.IsResourcesColumnVisible = value; } }
         public bool IsPropertiesColumnVisible { get { return _projectInfo.IsPropertiesColumnVisible; } set { _projectInfo.IsPropertiesColumnVisible = value; } }
-        public MainViewModel(PageInfo pageInfo, CreateProjectModel createProjectModel, CurrentProjectInfo projectInfo) {
+        public MainViewModel(PageInfo pageInfo, CreateProjectModel createProjectModel, CurrentProjectInfo projectInfo, VideoProcessingModel videoProcessingModel) {
             if (!KeyActivationHelper.CheckActivation())
                 KeyActivationHelper.ShowDialog();
             CurrentPage = new ProjectsListPage();
+            _videoProcessingModel = videoProcessingModel;
             _pageInfo = pageInfo;
             _pageInfo.CurrentPage = CurrentPage;
             _createProjectModel = createProjectModel;
@@ -50,7 +52,7 @@ namespace OpenCVVideoRedactor.ViewModel
         }
         public ICommand ExportVideo
         {
-            get { return new DelegateCommand(() => { _projectInfo.CompileVideo(); }); }
+            get { return new DelegateCommand(() => { _videoProcessingModel.CompileVideo(); }); }
         }
         public ICommand ImportResource
         {
@@ -67,7 +69,7 @@ namespace OpenCVVideoRedactor.ViewModel
         public ICommand ActivateProduct
         {
             get { 
-                return new DelegateCommand(() => { 
+                return new DelegateCommand(() => {
                     KeyActivationHelper.ShowDialog();
                     RaisePropertiesChanged(nameof(IsVisibleActivateButton));
                 }); 

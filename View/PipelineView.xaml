@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
              xmlns:local="clr-namespace:OpenCVVideoRedactor.View"
              DataContext="{Binding PipelineViewModel, Source={StaticResource ServiceLocatorObject}}"
              mc:Ignorable="d">
@@ -11,7 +12,14 @@
         <Viewbox x:Name="MediaView" HorizontalAlignment="Center" VerticalAlignment="Center"  MaxHeight="{Binding VideoHeight}" MaxWidth="{Binding VideoWidth}">
             <Border BorderBrush="Black" BorderThickness="2">
                 <Canvas Width="{Binding VideoWidth}" Height="{Binding VideoHeight}">
-                    <MediaElement Width="{Binding VideoWidth}" Height="{Binding VideoHeight}" Source="{Binding FilePath}" Visibility="{Binding IsPlaying, Converter={StaticResource BoolToVisibility}}"/>
+                    <MediaElement Width="{Binding VideoWidth}" Height="{Binding VideoHeight}" Source="{Binding FilePath}" Visibility="{Binding IsPlaying, Converter={StaticResource BoolToVisibility}}"
+                                    LoadedBehavior="Manual" ScrubbingEnabled="True">
+                        <i:Interaction.Triggers>
+                            <i:EventTrigger EventName="Loaded">
+                                <i:InvokeCommandAction Command="{Binding ConfigureVideoView}" PassEventArgsToCommand="True"/>
+                            </i:EventTrigger>
+                        </i:Interaction.Triggers>
+                    </MediaElement>
                     <Image Width="{Binding VideoWidth}" Height="{Binding VideoHeight}" Source="{Binding CurrentFrame}" Visibility="{Binding IsNotPlaying, Converter={StaticResource BoolToVisibility}}"/>
                 </Canvas>
             </Border>
