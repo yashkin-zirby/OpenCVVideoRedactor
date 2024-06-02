@@ -126,6 +126,7 @@ namespace OpenCVVideoRedactor.ViewModel
                     var mediaElement = args.Source as MediaElement;
                     if (mediaElement != null)
                     {
+                        mediaElement.Pause();
                         DispatcherTimer timer = new DispatcherTimer();
                         timer.Interval = TimeSpan.FromSeconds(0.05);
                         timer.Tick += (sender, args) =>
